@@ -1,5 +1,5 @@
-#ifndef baby_H
-#define baby_H
+#ifndef binManager_H
+#define binManager_H
 
 #include <stdlib.h>
 #include <string.h>

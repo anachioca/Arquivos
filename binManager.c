@@ -6,11 +6,11 @@
 // #define reg_size 128
 
 void WriteHeader(FILE *fp, header *h){
-    // fwrite(&(header->status), sizeof(char), 1, fp);
-    // fwrite(&(header->RRNproxRegistro), sizeof(int), 1, fp);
-    // fwrite(&(header->numeroRegistrosInseridos), sizeof(int), 1, fp);
-    // fwrite(&(header->numeroRegistrosRemovidos), sizeof(int), 1, fp);
-    // fwrite(&(header->numeroRegistrosAtualizados), sizeof(int), 1, fp);
+    fwrite(&(h->status), sizeof(char), 1, fp);
+    fwrite(&(h->RRNproxRegistro), sizeof(int), 1, fp);
+    fwrite(&(h->numeroRegistrosInseridos), sizeof(int), 1, fp);
+    fwrite(&(h->numeroRegistrosRemovidos), sizeof(int), 1, fp);
+    fwrite(&(h->numeroRegistrosAtualizados), sizeof(int), 1, fp);
     
     char trash = '$';
     for(int i = 0; i < 111; i++) // preenche espaço que sobra

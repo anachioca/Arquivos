@@ -15,15 +15,17 @@ int main(){
   // printf("\nBaby 1:\n");
   // printBaby(a);
 
-  FILE *fpb;
-  fpb = fopen("registro_bebes.bin", "w+b");
+  fp = fopen("registro_bebes.bin", "w+b");
+  char *stat = malloc(1*sizeof(char));
+  stat = "1";
 
   header *h = malloc(1*sizeof(header));
-  h->status = '1';
+  strncpy(h->status, stat, 1);
   h->RRNproxRegistro = 3;
+  h->numeroRegistrosInseridos = 2;
   
-  fwrite(&(header->status), sizeof(char), 1, fp);
-  binarioNaTela(fpb);
+  WriteHeader(fp, h);
+  binarioNaTela("registro_bebes.bin");
 
   return 0;
 }
