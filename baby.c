@@ -70,14 +70,32 @@ void setestadoBebe(baby *Baby, char* string){
 
 void printBaby(baby * Baby){
   if(!Baby) return;
-  printf("Mother city: %s\n", Baby->cidadeMae);
-  printf("Baby city: %s\n", Baby->cidadeBebe);
-  printf("Birth Id: %d\n", Baby->idNascimento);
-  printf("Mother age: %d\n", Baby->idadeMae);
-  printf("Birth date: %.10s\n", Baby->dataNascimento);
+
+  char teste[5] = "$";
+
+  if (strcmp((Baby->cidadeMae), teste)) printf("Mother city: %s\n", Baby->cidadeMae);
+  else printf("Mother city: INDEFINIDO\n");
+
+  if (strcmp((Baby->cidadeBebe), teste)) printf("Baby city: %s\n", Baby->cidadeBebe);
+  else printf("Baby city: INDEFINIDO\n");
+  
+  if (Baby->idNascimento != 0) printf("Birth Id: %d\n", Baby->idNascimento);
+  else printf("Birth Id: INDEFINIDO\n");
+
+  if(Baby->idadeMae != 0) printf("Mother age: %d\n", Baby->idadeMae);
+  else printf("Mother age: INDEFINIDO\n");
+ 
+  if (strcmp((Baby->dataNascimento), teste)) printf("Birth date: %.10s\n", Baby->dataNascimento);
+  else printf("Birth date: INDEFINIDO\n");
+  
   printf("Baby Sex: %d\n", Baby->sexoBebe);
-  printf("Mother state: %.2s\n", Baby->estadoMae);
-  printf("Baby state: %.2s\n", Baby->estadoBebe);
+
+  if (strcmp((Baby->estadoMae), teste)) printf("Mother state: %.2s\n", Baby->estadoMae);
+  else printf("Mother State: INDEFINIDO\n");
+  
+  if (strcmp((Baby->estadoBebe), teste)) printf("Baby state: %.2s\n", Baby->estadoBebe);
+  else printf("Baby State: INDEFINIDO\n");
+  
   printf("\n");
 }
 
@@ -103,61 +121,99 @@ baby * readCsvRow(FILE * fp){
   strncpy(Baby -> estadoBebe, line, 2);
   free(line);
 
-  //char enter[2];
-  //fread(enter, sizeof(char), 1, fp);
-
   return Baby;
 }
 
+// baby * readCsvRow(FILE * fp){
+//   baby * Baby = newBaby();
+//   char *none = malloc(4*sizeof(char));
+
+//   char * line = csvNextLine(fp);
+//   if (strlen(line) == 0) Baby->cidadeMae = none;
+//   else if (strlen(line) > 0) Baby->cidadeMae = line;
+//   free(line);
+
+//   line = csvNextLine(fp);
+//   if (strlen(line) == 0) Baby->cidadeBebe = none;
+//   else if (strlen(line) > 0) Baby->cidadeBebe = line;
+//   free(line);
+
+//   int aux = csvNextInt(fp);
+//   if (aux == 0) Baby->idNascimento = -1;
+//   else if (aux > 0) Baby->idNascimento = aux;
+//   aux = 0;
+
+//   aux = csvNextInt(fp);
+//   if (aux == 0) Baby->idadeMae = -1;
+//   else if (aux > 0) Baby->idadeMae = aux;
+//   aux = 0;
+
+//   line = csvNextLine(fp);
+//   if (strlen(line) == 0) strncpy(Baby -> dataNascimento, none, 10);
+//   else if (strlen(line) > 0) strncpy(Baby -> dataNascimento, line, 10);
+//   free(line);
+
+//   aux = csvNextInt(fp);
+//   if (aux == 0) Baby->sexoBebe = -1;
+//   else if (aux > 0) Baby->sexoBebe = aux;
+//   aux = 0;
+
+//   line = csvNextLine(fp);
+//   if (strlen(line) == 0) strncpy(Baby -> estadoMae, none, 10);
+//   else if (strlen(line) > 0) strncpy(Baby -> estadoMae, line, 10);
+//   free(line);
+
+//   line = csvUntilNextLine(fp);
+//   if (strlen(line) == 0) strncpy(Baby -> estadoBebe, none, 10);
+//   else if (strlen(line) > 0) strncpy(Baby -> estadoBebe, line, 10);
+//   free(line);
+
+//   return Baby;
+// }
+
 char * readCsvHeader(FILE * fp){ //funcionando
 
-  char *string = malloc(256*sizeof(char));
+  char string[256] = "$";
   char enter[2];
   fscanf(fp, "%[^\n]", string);
   fread(enter, sizeof(char), 1, fp);
   int size = strlen(string);
-  if (size == 0) {
-   printf("String vazia\n");
-  }
-  return string;
+  char *str = malloc((size+1)*sizeof(char));
+  strncpy(str, string, size);
+  return str;
 }
 
 char * csvUntilNextLine(FILE * fp){
-  char *string = malloc(256*sizeof(char));
+  char string[256] = "$";
   char virgula[1];
   fscanf(fp, "%[^\n]", string);
   fread(virgula, sizeof(char), 1, fp);
+
   int size = strlen(string);
-  if (size == 0) {
-   printf("String vazia\n");
-  }
-  return string;
+  char *str = malloc((size+1)*sizeof(char));
+  strncpy(str, string, size);
+  return str;
 }
 
 char * csvNextLine(FILE * fp){ //funcionando
-  char *string = malloc(256*sizeof(char));
+  char string[256] = "$";
   char virgula[1];
   fscanf(fp, "%[^,]", string);
   fread(virgula, sizeof(char), 1, fp);
+
   int size = strlen(string);
-  if (size == 0) {
-   printf("String vazia\n");
-  }
-  return string;
+  char *str = malloc((size+1)*sizeof(char));
+  
+  strncpy(str, string, size);
+  return str;
 }
 
 
 int csvNextInt(FILE * fp){
-  char string[256] = {"test"};
+  char string[256] = "$";
   fscanf(fp, "%[^,]", string);
   char virgula[1];
   fread(virgula, sizeof(char), 1, fp);
-  int size = strlen(string);
-
-  if (size == 0) {
-    printf("Campo vazio");
-  }
-  
   int num = atoi(string);
   return num;
 }
