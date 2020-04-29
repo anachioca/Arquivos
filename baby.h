@@ -7,6 +7,17 @@
 
     typedef struct info baby;
 
+    struct info{
+        char * cidadeMae;
+        char * cidadeBebe;
+        int idNascimento;
+        int idadeMae;
+        char dataNascimento[10];
+        int sexoBebe;
+        char estadoMae[2];
+        char estadoBebe[2];
+    };
+
     baby * newBaby();
     void destroyBaby(baby ** Baby);
     void setcidadeMae(baby *Baby, char *string);
