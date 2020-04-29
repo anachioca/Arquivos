@@ -1,0 +1,27 @@
+#ifndef baby_H
+#define baby_H
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+    typedef struct info baby;
+
+    baby * newBaby();
+    void destroyBaby(baby ** Baby);
+    void setcidadeMae(baby *Baby, char *string);
+    void setcidadeBebe(baby *Baby, char *string);
+    void setidNascimento(baby *Baby, int ID);
+    void setidadeMae(baby *Baby, int idade);
+    void setDataNascimento(baby *Baby, char* string);
+    void setsexoBebe(baby *Baby, int sexo);
+    void setestadoMae(baby *Baby, char* string);
+    void setestadoBebe(baby *Baby, char* string);
+    void printBaby(baby * Baby);
+    baby * readCsvRow(FILE * fp);
+    char * readCsvHeader(FILE * fp);
+    char * csvUntilNextLine(FILE * fp);
+    char * csvNextLine(FILE * fp);
+    int csvNextInt(FILE * fp);
+
+#endif
