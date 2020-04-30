@@ -5,27 +5,33 @@
 
 int main(){
 
-  FILE *fp;
+  FILE *fp, *fpb;
   fp = fopen("SCC0215012020arquivoCSV.csv", "r");
+  fpb = fopen("registro_bebes.bin", "w+b");
  
   readCsvHeader(fp);
+  InitHeader(fpb);
 
   baby *a = newBaby();
   a = readCsvRow(fp);
-  // printf("\nBaby 1:\n");
-  // printBaby(a);
+  printf("\nBaby 1:\n");
+  printBaby(a);
+  WriteReg(fpb, a);
 
-  fp = fopen("registro_bebes.bin", "w+b");
-  char *stat = malloc(1*sizeof(char));
-  stat = "1";
+  baby *b = newBaby();
+  b = readCsvRow(fp);
+  printf("\nBaby 2:\n");
+  printBaby(b);
+  WriteReg(fpb, b);
 
-  header *h = malloc(1*sizeof(header));
-  strncpy(h->status, stat, 1);
-  h->RRNproxRegistro = 3;
-  h->numeroRegistrosInseridos = 2;
-  
-  WriteHeader(fp, h);
-  binarioNaTela("registro_bebes.bin");
+  baby *c = newBaby();
+  c = readCsvRow(fp);
+  printf("\nBaby 2:\n");
+  printBaby(c);
+  WriteReg(fpb, c);
+
+  fclose(fp);
+  fclose(fpb);
 
   return 0;
 }

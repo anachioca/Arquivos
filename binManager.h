@@ -14,7 +14,11 @@
         int numeroRegistrosAtualizados;
     } header;
 
-    void WriteHeader(FILE *fp, header *h);
+    void InitHeader(FILE *fp);
+    void WriteTrash(FILE *fp, int qt);
+    void UpdateHeader(FILE *fp, int opt);
+    int getRRN(FILE *fp);
+    void WriteReg(FILE *fp, baby *b);
     void binarioNaTela(char *nomeArquivoBinario);
 
 #endif
