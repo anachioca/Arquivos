@@ -45,8 +45,8 @@ void setDataNascimento(baby *Baby, char* string){
    strncpy(Baby->dataNascimento, string, 10);
 }
 
-void setsexoBebe(baby *Baby, int sexo){
-  Baby->sexoBebe = sexo;
+void setsexoBebe(baby *Baby, char *sexo){
+  strncpy(Baby->dataNascimento, sexo, 1);
 }
 
 void setestadoMae(baby *Baby, char* string){
@@ -60,7 +60,7 @@ void setestadoBebe(baby *Baby, char* string){
 void printBaby(baby * Baby){
   if(!Baby) return;
 
-  char teste[5] = "$";
+  char teste[10] = "$$$$$$$$$$";
 
   //if (strcmp((Baby->cidadeMae), teste)) 
   printf("Mother city: %s\n", Baby->cidadeMae);
@@ -82,7 +82,7 @@ void printBaby(baby * Baby){
   printf("Birth date: %.10s\n", Baby->dataNascimento);
   //else printf("Birth date: INDEFINIDO\n");
   
-  printf("Baby Sex: %d\n", Baby->sexoBebe);
+  printf("Baby Sex: %.1s\n", Baby->sexoBebe);
 
   //if (strcmp((Baby->estadoMae), teste)) 
   printf("Mother state: %.2s\n", Baby->estadoMae);
@@ -108,7 +108,9 @@ baby * readCsvRow(FILE * fp){
   strncpy(Baby -> dataNascimento, line, 10);
   free(line);
 
-  Baby->sexoBebe = csvNextInt(fp);
+  line = csvNextLine(fp);
+  strncpy(Baby -> sexoBebe, line, 1);
+  free(line);
 
   line = csvNextLine(fp);
   strncpy(Baby -> estadoMae, line, 2);
@@ -125,7 +127,7 @@ baby * readCsvRow(FILE * fp){
 // Le a primeira linha do .csv, até chegar em um \n
 char * readCsvHeader(FILE * fp){ 
 
-  char string[256] = "$";
+  char string[256] = "$$$$$$$$$$";
   char enter[2];
   fscanf(fp, "%[^\n]", string);
   fread(enter, sizeof(char), 1, fp);
@@ -137,7 +139,7 @@ char * readCsvHeader(FILE * fp){
 
 // Le a proxima string até chegar em um \n
 char * csvUntilNextLine(FILE * fp){
-  char string[256] = "$";
+  char string[256] = "$$$$$$$$$$";
   char virgula[1];
   fscanf(fp, "%[^\n]", string);
   fread(virgula, sizeof(char), 1, fp);
@@ -150,7 +152,7 @@ char * csvUntilNextLine(FILE * fp){
 
 // Le a proxima string até chegar em uma vírgula
 char * csvNextLine(FILE * fp){
-  char string[256] = "$";
+  char string[256] = "$$$$$$$$$$";
   char virgula[1];
   fscanf(fp, "%[^,]", string);
   fread(virgula, sizeof(char), 1, fp);
@@ -164,12 +166,12 @@ char * csvNextLine(FILE * fp){
 
 // Le o próximo int até chegar em uma vírgula
 int csvNextInt(FILE * fp){
-  char string[256] = "$";
+  char string[256] = "$$$$$$$$$$";
   int num;
   fscanf(fp, "%[^,]", string);
   char virgula[1];
   fread(virgula, sizeof(char), 1, fp);
-  if (!strcmp(string, "$")) num = -1;
+  if (!strcmp(string, "$$$$$$$$$$")) num = -1;
   else num = atoi(string);
   return num;
 }

@@ -85,19 +85,34 @@ void WriteReg(FILE *fp, baby *b){
 
 	int a = strlen(b->cidadeMae);
 	int c = strlen(b->cidadeBebe);
-	fwrite(&b->idNascimento, sizeof(int), 1, fp);
-	fwrite(&b->idadeMae, sizeof(int), 1, fp);
-	fwrite(&b->dataNascimento, sizeof(char), 10, fp);
-	fwrite(&b->sexoBebe, sizeof(char), 1, fp);
-	fwrite(&b->estadoMae, sizeof(char), 2, fp);
-	fwrite(&b->estadoBebe, sizeof(char), 2, fp);
+	int zero = 0;
+	char zero_char = '0';
+
+	if (!strcmp(b->cidadeMae, "$$$$$$$$$$")) fwrite(&zero, sizeof(int), 1, fp);
+	else  fwrite(&a, sizeof(int), 1, fp);
+	if (!strcmp(b->cidadeBebe, "$$$$$$$$$$")) fwrite(&zero, sizeof(int), 1, fp);
+	else fwrite(&c, sizeof(int), 1, fp);
 
 	fwrite(&b->cidadeMae, sizeof(char), a, fp);
 	fwrite(&b->cidadeBebe, sizeof(char), c, fp);
-
-	printf("%d %d", a, c);
-	int lixo =  105 - a - c;
+	int lixo =  105 - a - c - 8;
 	WriteTrash(fp, lixo);
+
+	if (b->idNascimento == -1) WriteTrash(fp, 4);
+	else if (b->idNascimento != -1) fwrite(&b->idNascimento, sizeof(int), 1, fp);
+	
+	if (b->idadeMae == -1) WriteTrash(fp, 4);
+	else if (b->idadeMae != -1) fwrite(&b->idadeMae, sizeof(int), 1, fp);
+	
+	fwrite(&b->dataNascimento, sizeof(char), 10, fp);
+
+	printf("sexoBebe[0]: %c\n", b->sexoBebe[0]);
+	if (b->sexoBebe[0] == '$') fwrite(&zero_char, sizeof(char), 1, fp);
+	else fwrite(&b->sexoBebe, sizeof(char), 1, fp);
+
+	fwrite(&b->estadoMae, sizeof(char), 2, fp);
+	fwrite(&b->estadoBebe, sizeof(char), 2, fp);
+
 	UpdateHeader(fp, 1);
 }
 

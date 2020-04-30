@@ -13,7 +13,7 @@
         int idNascimento;
         int idadeMae;
         char dataNascimento[10];
-        int sexoBebe;
+        char sexoBebe[1];
         char estadoMae[2];
         char estadoBebe[2];
     };
@@ -25,7 +25,7 @@
     void setidNascimento(baby *Baby, int ID);
     void setidadeMae(baby *Baby, int idade);
     void setDataNascimento(baby *Baby, char* string);
-    void setsexoBebe(baby *Baby, int sexo);
+    void setsexoBebe(baby *Baby, char *sexo);
     void setestadoMae(baby *Baby, char* string);
     void setestadoBebe(baby *Baby, char* string);
     void printBaby(baby * Baby);

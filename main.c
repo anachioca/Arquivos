@@ -11,27 +11,19 @@ int main(){
  
   readCsvHeader(fp);
   InitHeader(fpb);
-
   baby *a = newBaby();
-  a = readCsvRow(fp);
-  printf("\nBaby 1:\n");
-  printBaby(a);
-  WriteReg(fpb, a);
 
-  baby *b = newBaby();
-  b = readCsvRow(fp);
-  printf("\nBaby 2:\n");
-  printBaby(b);
-  WriteReg(fpb, b);
-
-  baby *c = newBaby();
-  c = readCsvRow(fp);
-  printf("\nBaby 2:\n");
-  printBaby(c);
-  WriteReg(fpb, c);
+  for (int i = 0; i < 15; i++){
+    a = readCsvRow(fp);
+    printf("\nBaby %d:\n", i);
+    printBaby(a);
+    WriteReg(fpb, a);
+  }
 
   fclose(fp);
   fclose(fpb);
+
+  binarioNaTela("registro_bebes.bin");
 
   return 0;
 }
