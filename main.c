@@ -7,7 +7,7 @@ int main(){
 
   //abrindo os arquivos .csv e .bin
   FILE *fp, *fpb, *fpb2;
-  fp = fopen("arq01.csv", "r");
+  fp = fopen("arq02.csv", "r");
   fpb = fopen("registro_bebes.bin", "w+b");
  
   readCsvHeader(fp);
@@ -16,7 +16,7 @@ int main(){
   baby *b = newBaby();
 
   //lendo do arquivo .csv, guardando em uma struct baby e escrevendo no .bin
-  for (int i = 0; i < 1500; i++){
+  for (int i = 0; i < 501; i++){
     a = readCsvRow(fp);
     WriteReg(fpb, a);
   }
