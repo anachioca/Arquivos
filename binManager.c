@@ -3,7 +3,7 @@
 #include "binManager.h"
 #include "baby.h"
 
-// #define reg_size 128
+#define reg_size 128
 
 void InitHeader(FILE *fp){
 	header *h = malloc(1*sizeof(header));
@@ -25,6 +25,12 @@ void InitHeader(FILE *fp){
     
 	free(h);
     WriteTrash(fp, 111);
+}
+
+void destroyHeader(header ** h){
+  header * head = *h;
+  free(*h);
+  *h = NULL;
 }
 
 void WriteTrash(FILE *fp, int qt){
@@ -74,14 +80,13 @@ int getRRN(FILE *fp){
 	int RRN;
 	fseek(fp, 1, SEEK_SET);
 	fread(&RRN, sizeof(int), 1, fp);
-	printf("\nRRNproxReg = %d\n", RRN);
 	return RRN+1;
 }
 
 void WriteReg(FILE *fp, baby *b){
 
 	int RRN = getRRN(fp);
-	fseek(fp, RRN*128, SEEK_SET);
+	fseek(fp, RRN*reg_size, SEEK_SET);
 
 	int a = strlen(b->cidadeMae);
 	int c = strlen(b->cidadeBebe);
@@ -93,8 +98,8 @@ void WriteReg(FILE *fp, baby *b){
 	if (!strcmp(b->cidadeBebe, "$$$$$$$$$$")) fwrite(&zero, sizeof(int), 1, fp);
 	else fwrite(&c, sizeof(int), 1, fp);
 
-	fwrite(&b->cidadeMae, sizeof(char), a, fp);
-	fwrite(&b->cidadeBebe, sizeof(char), c, fp);
+	fwrite(b->cidadeMae, sizeof(char), a, fp);
+	fwrite(b->cidadeBebe, sizeof(char), c, fp);
 	int lixo =  105 - a - c - 8;
 	WriteTrash(fp, lixo);
 
@@ -106,7 +111,6 @@ void WriteReg(FILE *fp, baby *b){
 	
 	fwrite(&b->dataNascimento, sizeof(char), 10, fp);
 
-	printf("sexoBebe[0]: %c\n", b->sexoBebe[0]);
 	if (b->sexoBebe[0] == '$') fwrite(&zero_char, sizeof(char), 1, fp);
 	else fwrite(&b->sexoBebe, sizeof(char), 1, fp);
 
@@ -115,6 +119,69 @@ void WriteReg(FILE *fp, baby *b){
 
 	UpdateHeader(fp, 1);
 }
+
+void readHeader(FILE *fp, header *h){
+	fseek(fp, 0, SEEK_SET);
+	fread(&(h->status), sizeof(char), 1, fp);
+	fread(&(h->RRNproxRegistro), sizeof(int), 1, fp);
+	fread(&(h->numeroRegistrosInseridos), sizeof(int), 1, fp);
+	fread(&(h->numeroRegistrosRemovidos), sizeof(int), 1, fp);
+	fread(&(h->numeroRegistrosAtualizados), sizeof(int), 1, fp);
+}
+
+void readReg(FILE *fp, baby *b, int RRN){
+	int byteoffset = (RRN+1)*reg_size;
+	fseek(fp, byteoffset, SEEK_SET);
+
+	int a, c; //size of cidadeMae and cidadeBebe
+
+	fread(&(a), sizeof(int), 1, fp);
+	fread(&(c), sizeof(int), 1, fp);
+	b->cidadeMae = malloc((a+1)*sizeof(char));
+	b->cidadeBebe = malloc((c+1)*sizeof(char));
+
+	fread(b->cidadeMae, sizeof(char), a, fp);
+	fread(b->cidadeBebe, sizeof(char), c, fp);
+
+	strcat(b->cidadeMae, "\0");
+	strcat(b->cidadeMae, "\0");
+
+	fseek(fp, byteoffset+105, SEEK_SET);
+
+	fread(&(b->idNascimento), sizeof(int), 1, fp);
+	fread(&(b->idadeMae), sizeof(int), 1, fp);
+	fread(b->dataNascimento, sizeof(char), 10, fp);
+	fread(b->sexoBebe, sizeof(char), 1, fp);
+	fread(b->estadoMae, sizeof(char), 2, fp);
+	fread(b->estadoBebe, sizeof(char), 2, fp);
+
+}
+
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+
+
+
+/*
+* Abaixo seguem funções que fazem a escrita do binário em "stdout" (tela) pra poder ser comparado no run.codes.
+*
+* Funciona assim: você faz tudo o que tiver que fazer na funcionalidade no arquivo em disco, assim como ensinado nas aulas da disciplina.
+* Ao fim da funcionalidade, use a função "binarioNaTela" e a função já cuida de tudo para você. É só chamar a função.
+*
+* Note que ao usar a binarioNaTela, o fclose no arquivo binário já deve ter sido feito anteriormente. Você passa o nome do arquivo binário ("arquivoTrabX.bin") pra ela e ela vai ler tudo e escrever na tela.
+*
+* Você pode colocar isso num módulo .h separado, ou incluir as funções no próprio código .c: como preferir.
+* VOCÊ NÃO PRECISA ENTENDER ESSAS FUNÇÕES. É só usar elas da forma certa depois de acabar a funcionalidade.
+* NÃO MODIFIQUE ESSAS FUNÇÕES. Da forma como elas estão aqui, já estão funcionando para o propósito delas.
+*
+* Tá tudo testado e funcionando, mas qualquer dúvida acerca dessas funções, falar com o monitor Matheus (mcarvalhor@usp.br).
+*/
+
+// Abaixo vai em algum .c
+
 
 void binarioNaTela(char *nomeArquivoBinario) {
 
@@ -143,3 +210,73 @@ void binarioNaTela(char *nomeArquivoBinario) {
 	free(mb);
 	fclose(fs);
 }
+
+
+
+
+void trim(char *str) {
+
+	/*
+	*	Essa função arruma uma string de entrada "str".
+	*	Manda pra ela uma string que tem '\r' e ela retorna sem.
+	*	Ela remove do início e do fim da string todo tipo de espaçamento (\r, \n, \t, espaço, ...).
+	*	Por exemplo:
+	*
+	*	char minhaString[] = "    \t TESTE  DE STRING COM BARRA R     \t  \r\n ";
+	*	trim(minhaString);
+	*	printf("[%s]", minhaString); // vai imprimir "[TESTE  DE STRING COM BARRA R]"
+	*
+	*/
+
+	size_t len;
+	char *p;
+
+	// remove espaçamentos do fim
+	for(len = strlen(str); len > 0 && isspace(str[len - 1]); len--);
+	str[len] = '\0';
+	
+	// remove espaçamentos do começo
+	for(p = str; *p != '\0' && isspace(*p); p++);
+	len = strlen(p);
+	
+	memmove(str, p, sizeof(char) * (len + 1));
+}
+
+
+
+
+void scan_quote_string(char *str) {
+
+	/*
+	*	Use essa função para ler um campo string delimitado entre aspas (").
+	*	Chame ela na hora que for ler tal campo. Por exemplo:
+	*
+	*	A entrada está da seguinte forma:
+	*		nomeDoCampo "MARIA DA SILVA"
+	*
+	*	Para ler isso para as strings já alocadas str1 e str2 do seu programa, você faz:
+	*		scanf("%s", str1); // Vai salvar nomeDoCampo em str1
+	*		scan_quote_string(str2); // Vai salvar MARIA DA SILVA em str2 (sem as aspas)
+	*
+	*/
+
+	char R;
+
+	while((R = getchar()) != EOF && isspace(R)); // ignorar espaços, \r, \n...
+
+	if(R == 'N' || R == 'n') { // campo NULO
+		getchar(); getchar(); getchar(); // ignorar o "ULO" de NULO.
+		strcpy(str, ""); // copia string vazia
+	} else if(R == '\"') {
+		if(scanf("%[^\"]", str) != 1) { // ler até o fechamento das aspas
+			strcpy(str, "");
+		}
+		getchar(); // ignorar aspas fechando
+	} else if(R != EOF){ // vc tá tentando ler uma string que não tá entre aspas! Fazer leitura normal %s então, pois deve ser algum inteiro ou algo assim...
+		str[0] = R;
+		scanf("%s", &str[1]);
+	} else { // EOF
+		strcpy(str, "");
+	}
+}
+

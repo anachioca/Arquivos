@@ -15,10 +15,15 @@
     } header;
 
     void InitHeader(FILE *fp);
+    void destroyHeader(header ** h);
     void WriteTrash(FILE *fp, int qt);
     void UpdateHeader(FILE *fp, int opt);
     int getRRN(FILE *fp);
     void WriteReg(FILE *fp, baby *b);
+    void readHeader(FILE *fp, header *h);
+    void readReg(FILE *fp, baby *b, int RRN);
     void binarioNaTela(char *nomeArquivoBinario);
+    void trim(char *str);
+    void scan_quote_string(char *str);
 
 #endif
