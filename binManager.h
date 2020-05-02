@@ -18,6 +18,8 @@
     void destroyHeader(header ** h);
     void WriteTrash(FILE *fp, int qt);
     void UpdateHeader(FILE *fp, int opt);
+    void setStatus(FILE *fp);
+    void resetStatus(FILE *fp);
     int getRRN(FILE *fp);
     void WriteReg(FILE *fp, baby *b);
     void readHeader(FILE *fp, header *h);

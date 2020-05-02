@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #include "binManager.h"
 #include "baby.h"
 
@@ -76,6 +78,38 @@ void UpdateHeader(FILE *fp, int opt){
 	fseek(fp, position, SEEK_SET);
 }
 
+void setStatus(FILE *fp){
+	long position = ftell(fp);
+  	fseek(fp, 0, SEEK_SET);
+	header *h = malloc(1*sizeof(header));
+	char *stat = malloc(1*sizeof(char));
+  	stat = "1";
+	strncpy(h->status, stat, 1);
+
+	fwrite(&(h->status), sizeof(char), 1, fp);
+
+	//free(stat);
+	destroyHeader(&h);
+
+	fseek(fp, position, SEEK_SET);
+}
+
+void resetStatus(FILE *fp){
+	long position = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	header *h = malloc(1*sizeof(header));
+	char *stat = malloc(1*sizeof(char));
+  	stat = "0";
+	strncpy(h->status, stat, 1);
+
+	fwrite(&(h->status), sizeof(char), 1, fp);
+
+	//free(stat);
+	destroyHeader(&h);
+
+	fseek(fp, position, SEEK_SET);
+}
+
 int getRRN(FILE *fp){
 	int RRN;
 	fseek(fp, 1, SEEK_SET);
@@ -92,10 +126,18 @@ void WriteReg(FILE *fp, baby *b){
 	int c = strlen(b->cidadeBebe);
 	int zero = 0;
 	char zero_char = '0';
+	char strvazia = '\0';
 
-	if (!strcmp(b->cidadeMae, "$$$$$$$$$$")) fwrite(&zero, sizeof(int), 1, fp);
+	if (b->cidadeMae[0] == '$') {
+		fwrite(&zero, sizeof(int), 1, fp);
+		a = 0;
+	}
 	else  fwrite(&a, sizeof(int), 1, fp);
-	if (!strcmp(b->cidadeBebe, "$$$$$$$$$$")) fwrite(&zero, sizeof(int), 1, fp);
+
+	if (b->cidadeBebe[0] == '$') {
+		fwrite(&zero, sizeof(int), 1, fp);
+		c = 0;
+	}
 	else fwrite(&c, sizeof(int), 1, fp);
 
 	fwrite(b->cidadeMae, sizeof(char), a, fp);
@@ -103,19 +145,30 @@ void WriteReg(FILE *fp, baby *b){
 	int lixo =  105 - a - c - 8;
 	WriteTrash(fp, lixo);
 
-	if (b->idNascimento == -1) WriteTrash(fp, 4);
-	else if (b->idNascimento != -1) fwrite(&b->idNascimento, sizeof(int), 1, fp);
 	
-	if (b->idadeMae == -1) WriteTrash(fp, 4);
-	else if (b->idadeMae != -1) fwrite(&b->idadeMae, sizeof(int), 1, fp);
+	fwrite(&b->idNascimento, sizeof(int), 1, fp);
+	fwrite(&b->idadeMae, sizeof(int), 1, fp);
 	
-	fwrite(&b->dataNascimento, sizeof(char), 10, fp);
+	if (b->dataNascimento[0] == '$'){
+		fwrite(&strvazia, sizeof(char), 1, fp);
+		WriteTrash(fp, 9);
+	}
+	else if (b->dataNascimento[0] != '$') fwrite(&b->dataNascimento, sizeof(char), 10, fp);
 
 	if (b->sexoBebe[0] == '$') fwrite(&zero_char, sizeof(char), 1, fp);
 	else fwrite(&b->sexoBebe, sizeof(char), 1, fp);
 
-	fwrite(&b->estadoMae, sizeof(char), 2, fp);
-	fwrite(&b->estadoBebe, sizeof(char), 2, fp);
+	if (b->estadoMae[0] == '$'){
+		fwrite(&strvazia, sizeof(char), 1, fp);
+		WriteTrash(fp, 1);
+	}
+	else if (b->estadoMae[0] != '$') fwrite(&b->estadoMae, sizeof(char), 2, fp);
+	
+	if (b->estadoBebe[0] == '$'){
+		fwrite(&strvazia, sizeof(char), 1, fp);
+		WriteTrash(fp, 1);
+	}
+	else if (b->estadoBebe[0] != '$') fwrite(&b->estadoBebe, sizeof(char), 2, fp);
 
 	UpdateHeader(fp, 1);
 }
@@ -136,9 +189,17 @@ void readReg(FILE *fp, baby *b, int RRN){
 	int a, c; //size of cidadeMae and cidadeBebe
 
 	fread(&(a), sizeof(int), 1, fp);
+
+	if (a == -1) {
+		printf("Registro Removido");
+		return;
+	}
+	
 	fread(&(c), sizeof(int), 1, fp);
 	b->cidadeMae = malloc((a+1)*sizeof(char));
 	b->cidadeBebe = malloc((c+1)*sizeof(char));
+
+	
 
 	fread(b->cidadeMae, sizeof(char), a, fp);
 	fread(b->cidadeBebe, sizeof(char), c, fp);
@@ -156,14 +217,6 @@ void readReg(FILE *fp, baby *b, int RRN){
 	fread(b->estadoBebe, sizeof(char), 2, fp);
 
 }
-
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-
-
 
 /*
 * Abaixo seguem funções que fazem a escrita do binário em "stdout" (tela) pra poder ser comparado no run.codes.

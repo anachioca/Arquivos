@@ -60,46 +60,19 @@ void setestadoBebe(baby *Baby, char* string){
 void printBaby(baby * Baby){
   if(!Baby) return;
 
-  char teste[10] = "$$$$$$$$$$";
+  if (Baby->sexoBebe[0] == '0') printf("Nasceu em %s/%s, em %.10s, um bebe de sexo IGNORADO.\n", Baby->cidadeBebe, Baby->estadoBebe, Baby->dataNascimento);
+  if (Baby->sexoBebe[0] == '1') printf("Nasceu em %s/%s, em %.10s, um bebe de sexo MASCULINO.\n", Baby->cidadeBebe, Baby->estadoBebe, Baby->dataNascimento);
+  if (Baby->sexoBebe[0] == '2') printf("Nasceu em %s/%s, em %.10s, um bebe de sexo FEMININO.\n", Baby->cidadeBebe, Baby->estadoBebe, Baby->dataNascimento);
 
-  //if (strcmp((Baby->cidadeMae), teste)) 
-  printf("Mother city: %s\n", Baby->cidadeMae);
-  //else printf("Mother city: INDEFINIDO\n");
-
-  //if (strcmp((Baby->cidadeBebe), teste)) 
-  printf("Baby city: %s\n", Baby->cidadeBebe);
-  //else printf("Baby city: INDEFINIDO\n");
-  
-  //if (Baby->idNascimento != 0) 
-  printf("Birth Id: %d\n", Baby->idNascimento);
-  //else printf("Birth Id: INDEFINIDO\n");
-
-  //if(Baby->idadeMae != 0) 
-  printf("Mother age: %d\n", Baby->idadeMae);
-  //else printf("Mother age: INDEFINIDO\n");
- 
-  //if (strcmp((Baby->dataNascimento), teste)) 
-  printf("Birth date: %.10s\n", Baby->dataNascimento);
-  //else printf("Birth date: INDEFINIDO\n");
-  
-  printf("Baby Sex: %.1s\n", Baby->sexoBebe);
-
-  //if (strcmp((Baby->estadoMae), teste)) 
-  printf("Mother state: %.2s\n", Baby->estadoMae);
-  //else printf("Mother State: INDEFINIDO\n");
-  
-  //if (strcmp((Baby->estadoBebe), teste)) 
-  printf("Baby state: %.2s\n", Baby->estadoBebe);
-  //else printf("Baby State: INDEFINIDO\n");
-  
-  printf("\n");
 }
 
 // Le uma linha inteira do .csv e coloca cada informação em um lugar da struct baby
 baby * readCsvRow(FILE * fp){
   baby * Baby = newBaby();
 
+  
   Baby->cidadeMae = csvNextLine(fp);
+  
   Baby->cidadeBebe = csvNextLine(fp);
   Baby->idNascimento = csvNextInt(fp);
   Baby->idadeMae = csvNextInt(fp);
@@ -127,7 +100,7 @@ baby * readCsvRow(FILE * fp){
 // Le a primeira linha do .csv, até chegar em um \n
 char * readCsvHeader(FILE * fp){ 
 
-  char string[256] = "$$$$$$$$$$";
+  char string[256] = "$";
   char enter[2];
   fscanf(fp, "%[^\n]", string);
   fread(enter, sizeof(char), 1, fp);
@@ -139,7 +112,7 @@ char * readCsvHeader(FILE * fp){
 
 // Le a proxima string até chegar em um \n
 char * csvUntilNextLine(FILE * fp){
-  char string[256] = "$$$$$$$$$$";
+  char string[256] = "$";
   char virgula[1];
   fscanf(fp, "%[^\n]", string);
   fread(virgula, sizeof(char), 1, fp);
@@ -152,26 +125,26 @@ char * csvUntilNextLine(FILE * fp){
 
 // Le a proxima string até chegar em uma vírgula
 char * csvNextLine(FILE * fp){
-  char string[256] = "$$$$$$$$$$";
+  char string[256] = "$";
   char virgula[1];
   fscanf(fp, "%[^,]", string);
   fread(virgula, sizeof(char), 1, fp);
 
   int size = strlen(string);
   char *str = malloc((size+1)*sizeof(char));
-  
-  strncpy(str, string, size);
+
+  strncpy(str, string, size+1);
   return str;
 }
 
 // Le o próximo int até chegar em uma vírgula
 int csvNextInt(FILE * fp){
-  char string[256] = "$$$$$$$$$$";
+  char string[256] = "$";
   int num;
   fscanf(fp, "%[^,]", string);
   char virgula[1];
   fread(virgula, sizeof(char), 1, fp);
-  if (!strcmp(string, "$$$$$$$$$$")) num = -1;
+  if (!strcmp(string, "$")) num = -1;
   else num = atoi(string);
   return num;
 }
