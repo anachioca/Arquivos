@@ -57,12 +57,41 @@ void setestadoBebe(baby *Baby, char* string){
   strncpy(Baby->estadoBebe, string, 2);
 }
 
+
+// Função que imprime um "baby"
 void printBaby(baby * Baby){
   if(!Baby) return;
+  char *estado;
+  char *nascimento;
 
-  if (Baby->sexoBebe[0] == '0') printf("Nasceu em %s/%s, em %.10s, um bebe de sexo IGNORADO.\n", Baby->cidadeBebe, Baby->estadoBebe, Baby->dataNascimento);
-  if (Baby->sexoBebe[0] == '1') printf("Nasceu em %s/%s, em %.10s, um bebe de sexo MASCULINO.\n", Baby->cidadeBebe, Baby->estadoBebe, Baby->dataNascimento);
-  if (Baby->sexoBebe[0] == '2') printf("Nasceu em %s/%s, em %.10s, um bebe de sexo FEMININO.\n", Baby->cidadeBebe, Baby->estadoBebe, Baby->dataNascimento);
+  // Tratamento da leitura (casos em que a string está vazia):
+  if (strlen(Baby->cidadeBebe) == 0) {
+    Baby->cidadeBebe = malloc(1*sizeof(char));
+    Baby->cidadeBebe = "-";
+  }
+
+  if (strlen(Baby->estadoBebe) == 0) {
+    estado = malloc(1*sizeof(char));
+    estado = "-";
+  }
+  else {
+    estado = malloc(2*sizeof(char));
+    strncpy(estado, Baby->estadoBebe, 2);
+  }
+
+  if (strlen(Baby->dataNascimento) == 0) {
+    nascimento = malloc(1*sizeof(char));
+    nascimento = "-";
+  }
+  else {
+    nascimento = malloc(10*sizeof(char));
+    strncpy(nascimento, Baby->dataNascimento, 10);
+  }
+
+  // Imprime de acordo com o sexo do bebê:
+  if (Baby->sexoBebe[0] == '0') printf("Nasceu em %s/%s, em %s, um bebê de sexo IGNORADO.\n", Baby->cidadeBebe, estado, nascimento);
+  if (Baby->sexoBebe[0] == '1') printf("Nasceu em %s/%s, em %s, um bebê de sexo MASCULINO.\n", Baby->cidadeBebe, estado, nascimento);
+  if (Baby->sexoBebe[0] == '2') printf("Nasceu em %s/%s, em %s, um bebê de sexo FEMININO.\n", Baby->cidadeBebe, estado, nascimento);
 
 }
 

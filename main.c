@@ -23,11 +23,6 @@ int main(){
     InitHeader(fpb); 
     baby *a = newBaby();
 
-    // for (int i = 0; i < 5; i++){ // colocar pra ler até o fim do arquivo
-    //   a = readCsvRow(fp);
-    //   WriteReg(fpb, a);
-    // }
-
     long position = ftell(fp); // Saving current position
     fseek(fp, 0, SEEK_END); // Going to end of file
     long end = ftell(fp); // Saving current position
@@ -50,12 +45,23 @@ int main(){
     scanf("%s", arquivoGerado);
     baby *b = newBaby();
     FILE *fpb;
+    if (fopen(arquivoGerado, "rb") == NULL){
+      printf("Falha no processamento do arquivo.");
+      return 0;
+    }
+
     fpb = fopen(arquivoGerado, "rb");
 
     //lê as infos do cabeçalho
     header *h = malloc(1*sizeof(header));
     readHeader(fpb, h);
     int RRN = h->RRNproxRegistro;
+
+
+    if(h->status[0] == '0'){
+      printf("Falha no processamento do arquivo.");
+      return 0;
+    }
 
     //lê os registros e guarda em uma struct baby, imprimindo-a
     for (int i = 0; i < RRN; i++){
@@ -66,8 +72,6 @@ int main(){
     destroyBaby(&b);
     destroyHeader(&h);
     fclose(fpb);
-
-    binarioNaTela(arquivoGerado);
   }
 
   return 0;
