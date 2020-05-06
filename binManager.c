@@ -29,10 +29,10 @@ void InitHeader(FILE *fp){
     WriteTrash(fp, 111);
 }
 
-void destroyHeader(header ** h){
-  header * head = *h;
-  free(*h);
-  *h = NULL;
+void destroyHeader(header ** head){
+  header * h = *head;
+  free(*head);
+  *head = NULL;
 }
 
 void WriteTrash(FILE *fp, int qt){
@@ -82,13 +82,11 @@ void setStatus(FILE *fp){
 	long position = ftell(fp);
   	fseek(fp, 0, SEEK_SET);
 	header *h = malloc(1*sizeof(header));
-	char *stat = malloc(1*sizeof(char));
-  	stat = "1";
-	strncpy(h->status, stat, 1);
+	char stat = '1';
+	strncpy(h->status, &stat, 1);
 
 	fwrite(&(h->status), sizeof(char), 1, fp);
 
-	//free(stat);
 	destroyHeader(&h);
 
 	fseek(fp, position, SEEK_SET);
@@ -98,13 +96,11 @@ void resetStatus(FILE *fp){
 	long position = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 	header *h = malloc(1*sizeof(header));
-	char *stat = malloc(1*sizeof(char));
-  	stat = "0";
-	strncpy(h->status, stat, 1);
+	char stat = '0';
+	strncpy(h->status, &stat, 1);
 
 	fwrite(&(h->status), sizeof(char), 1, fp);
 
-	//free(stat);
 	destroyHeader(&h);
 
 	fseek(fp, position, SEEK_SET);
@@ -199,7 +195,6 @@ void readReg(FILE *fp, baby *b, int RRN){
 	b->cidadeMae = malloc((a+1)*sizeof(char));
 	b->cidadeBebe = malloc((c+1)*sizeof(char));
 
-	
 
 	fread(b->cidadeMae, sizeof(char), a, fp);
 	fread(b->cidadeBebe, sizeof(char), c, fp);
@@ -215,7 +210,6 @@ void readReg(FILE *fp, baby *b, int RRN){
 	fread(b->sexoBebe, sizeof(char), 1, fp);
 	fread(b->estadoMae, sizeof(char), 2, fp);
 	fread(b->estadoBebe, sizeof(char), 2, fp);
-
 }
 
 /*

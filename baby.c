@@ -20,8 +20,6 @@ void destroyBaby(baby ** Baby){
   if(b -> cidadeMae) free(b -> cidadeMae);
   if(b -> cidadeBebe) free(b -> cidadeBebe);
   free(*Baby);
-  b -> cidadeMae = NULL;
-  b -> cidadeBebe = NULL;
   *Baby = NULL;
 }
 
@@ -57,25 +55,16 @@ void setestadoBebe(baby *Baby, char* string){
   strncpy(Baby->estadoBebe, string, 2);
 }
 
-
-// Função que imprime um "baby"
 void printBaby(baby * Baby){
   if(!Baby) return;
-  char *estado;
+  char estado[2];
   char *nascimento;
 
-  // Tratamento da leitura (casos em que a string está vazia):
-  if (strlen(Baby->cidadeBebe) == 0) {
-    Baby->cidadeBebe = malloc(1*sizeof(char));
-    Baby->cidadeBebe = "-";
-  }
-
   if (strlen(Baby->estadoBebe) == 0) {
-    estado = malloc(1*sizeof(char));
-    estado = "-";
+    estado[0] = '-';
+    estado[1] = '\0';
   }
   else {
-    estado = malloc(2*sizeof(char));
     strncpy(estado, Baby->estadoBebe, 2);
   }
 
@@ -88,17 +77,25 @@ void printBaby(baby * Baby){
     strncpy(nascimento, Baby->dataNascimento, 10);
   }
 
-  // Imprime de acordo com o sexo do bebê:
-  if (Baby->sexoBebe[0] == '0') printf("Nasceu em %s/%s, em %s, um bebê de sexo IGNORADO.\n", Baby->cidadeBebe, estado, nascimento);
-  if (Baby->sexoBebe[0] == '1') printf("Nasceu em %s/%s, em %s, um bebê de sexo MASCULINO.\n", Baby->cidadeBebe, estado, nascimento);
-  if (Baby->sexoBebe[0] == '2') printf("Nasceu em %s/%s, em %s, um bebê de sexo FEMININO.\n", Baby->cidadeBebe, estado, nascimento);
+  if (strlen(Baby->cidadeBebe) == 0) {
+    if (Baby->sexoBebe[0] == '0') printf("Nasceu em -/%s, em %s, um bebê de sexo IGNORADO.\n", estado, nascimento);
+    if (Baby->sexoBebe[0] == '1') printf("Nasceu em -/%s, em %s, um bebê de sexo MASCULINO.\n", estado, nascimento);
+    if (Baby->sexoBebe[0] == '2') printf("Nasceu em -/%s, em %s, um bebê de sexo FEMININO.\n", estado, nascimento);
+  }
 
+  else {
+    if (Baby->sexoBebe[0] == '0') printf("Nasceu em %s/%s, em %s, um bebê de sexo IGNORADO.\n", Baby->cidadeBebe, estado, nascimento);
+    if (Baby->sexoBebe[0] == '1') printf("Nasceu em %s/%s, em %s, um bebê de sexo MASCULINO.\n", Baby->cidadeBebe, estado, nascimento);
+    if (Baby->sexoBebe[0] == '2') printf("Nasceu em %s/%s, em %s, um bebê de sexo FEMININO.\n", Baby->cidadeBebe, estado, nascimento);
+  }
+    
+  // free(estado);
+  // free(nascimento);
 }
 
-// Le uma linha inteira do .csv e coloca cada informação em um lugar da struct baby
+// Le uma linha inteira do .csv e coloca cada informação em um lugar da struct baby criada
 baby * readCsvRow(FILE * fp){
   baby * Baby = newBaby();
-
   
   Baby->cidadeMae = csvNextLine(fp);
   
@@ -125,18 +122,12 @@ baby * readCsvRow(FILE * fp){
   return Baby;
 }
 
-
 // Le a primeira linha do .csv, até chegar em um \n
-char * readCsvHeader(FILE * fp){ 
-
+void readCsvHeader(FILE * fp){ 
   char string[256] = "$";
   char enter[2];
   fscanf(fp, "%[^\n]", string);
   fread(enter, sizeof(char), 1, fp);
-  int size = strlen(string);
-  char *str = malloc((size+1)*sizeof(char));
-  strncpy(str, string, size);
-  return str;
 }
 
 // Le a proxima string até chegar em um \n

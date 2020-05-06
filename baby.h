@@ -30,7 +30,7 @@
     void setestadoBebe(baby *Baby, char* string);
     void printBaby(baby * Baby);
     baby * readCsvRow(FILE * fp);
-    char * readCsvHeader(FILE * fp);
+    void readCsvHeader(FILE * fp);
     char * csvUntilNextLine(FILE * fp);
     char * csvNextLine(FILE * fp);
     int csvNextInt(FILE * fp);

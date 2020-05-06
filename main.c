@@ -21,7 +21,7 @@ int main(){
 
     readCsvHeader(fp); //colocar condição caso o arquivo seja vazio
     InitHeader(fpb); 
-    baby *a = newBaby();
+    baby *a;
 
     long position = ftell(fp); // Saving current position
     fseek(fp, 0, SEEK_END); // Going to end of file
@@ -31,10 +31,10 @@ int main(){
     while (ftell(fp) != end){
         a = readCsvRow(fp);
         WriteReg(fpb, a); 
+        destroyBaby(&a);
     }
 
     setStatus(fpb);
-    destroyBaby(&a);
     fclose(fpb);
     fclose(fp);
 
@@ -45,6 +45,7 @@ int main(){
     scanf("%s", arquivoGerado);
     baby *b = newBaby();
     FILE *fpb;
+    
     if (fopen(arquivoGerado, "rb") == NULL){
       printf("Falha no processamento do arquivo.");
       return 0;
