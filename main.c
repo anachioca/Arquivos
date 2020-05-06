@@ -23,12 +23,15 @@ int main(){
     InitHeader(fpb); 
     baby *a;
 
-    long position = ftell(fp); // Saving current position
-    fseek(fp, 0, SEEK_END); // Going to end of file
-    long end = ftell(fp); // Saving current position
-    fseek(fp, position, SEEK_SET); // Voltando para posição inicial
+    long position = ftell(fp); // Salva posição atual
+    fseek(fp, 0, SEEK_END); // vai até o fim do arquivo
+    long end = ftell(fp); // salva a posição atual (fim do arquivo)
+    fseek(fp, position, SEEK_SET); // volta para a posição inicial
     
-    while (ftell(fp) != end){
+    //enquanto posição atual não for o fim do arquivo
+    //lê linha do arquivo .csv e escreve no .bin
+    //após fazer isso, apaga as informações 
+    while (ftell(fp) != end){ 
         a = readCsvRow(fp);
         WriteReg(fpb, a); 
         destroyBaby(&a);
@@ -46,6 +49,8 @@ int main(){
     baby *b = newBaby();
     FILE *fpb;
     
+    // checa se o arquivo a ser aberto existe
+    //caso não seja possível abri-lo, imprime mensagem de erro
     if (fopen(arquivoGerado, "rb") == NULL){
       printf("Falha no processamento do arquivo.");
       return 0;
@@ -53,12 +58,12 @@ int main(){
 
     fpb = fopen(arquivoGerado, "rb");
 
-    //lê as infos do cabeçalho
+    //lê as informações do cabeçalho
     header *h = malloc(1*sizeof(header));
     readHeader(fpb, h);
     int RRN = h->RRNproxRegistro;
 
-
+    //caso o status seja 0, imprime mensagem de erro
     if(h->status[0] == '0'){
       printf("Falha no processamento do arquivo.");
       return 0;
