@@ -1,3 +1,6 @@
+// Trabalho 1 || SCC0215 - Organização de Arquivos
+// Ana Laura Chioca Vieira || NUSP: 9866531
+
 #include "baby.h"
 #include "binManager.h"
 #include <stdio.h>
@@ -73,6 +76,12 @@ int main(){
     //caso o status seja 0, imprime mensagem de erro
     if(h->status[0] == '0'){
       printf("Falha no processamento do arquivo.");
+      return 0;
+    }
+
+    // caso não existam registros no arquivo
+    if (RRN == 0){
+      printf("Registro inexistente.");
       return 0;
     }
 

@@ -1,3 +1,6 @@
+// Trabalho 1 || SCC0215 - Organização de Arquivos
+// Ana Laura Chioca Vieira || NUSP: 9866531
+
 #ifndef baby_H
 #define baby_H
 
@@ -8,8 +11,8 @@
     typedef struct info baby;
 
     struct info{
-        char * cidadeMae;
-        char * cidadeBebe;
+        char * cidadeMae; //campo de tamanho variável
+        char * cidadeBebe;  //campo de tamanho variável
         int idNascimento;
         int idadeMae;
         char dataNascimento[10];

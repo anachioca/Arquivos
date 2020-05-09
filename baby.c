@@ -1,3 +1,6 @@
+// Trabalho 1 || SCC0215 - Organização de Arquivos
+// Ana Laura Chioca Vieira || NUSP: 9866531
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -23,38 +26,6 @@ void destroyBaby(baby ** Baby){
   if(b -> cidadeBebe) free(b -> cidadeBebe);
   free(*Baby);
   *Baby = NULL;
-}
-
-void setcidadeMae(baby *Baby, char *string){
-  Baby->cidadeMae = string;
-}
-
-void setcidadeBebe(baby *Baby, char *string){
-  Baby->cidadeBebe = string;
-}
-
-void setidNascimento(baby *Baby, int ID){
-  Baby->idNascimento = ID;
-}
-
-void setidadeMae(baby *Baby, int idade){
-  Baby->idadeMae = idade;
-}
-
-void setDataNascimento(baby *Baby, char* string){
-   strncpy(Baby->dataNascimento, string, 10);
-}
-
-void setsexoBebe(baby *Baby, char *sexo){
-  strncpy(Baby->dataNascimento, sexo, 1);
-}
-
-void setestadoMae(baby *Baby, char* string){
-  strncpy(Baby->estadoMae, string, 2);
-}
-
-void setestadoBebe(baby *Baby, char* string){
-  strncpy(Baby->estadoBebe, string, 2);
 }
 
 // função que imprime uma struct baby

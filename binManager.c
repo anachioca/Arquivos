@@ -1,3 +1,6 @@
+// Trabalho 1 || SCC0215 - Organização de Arquivos
+// Ana Laura Chioca Vieira || NUSP: 9866531
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -65,6 +68,7 @@ void UpdateHeader(FILE *fp, int opt){
 
 	if (opt == 0){
 		h->numeroRegistrosRemovidos++;
+		h->numeroRegistrosInseridos--;
 	}
 
 	if (opt == 2){

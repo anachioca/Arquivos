@@ -1,3 +1,6 @@
+// Trabalho 1 || SCC0215 - Organização de Arquivos
+// Ana Laura Chioca Vieira || NUSP: 9866531
+
 #ifndef binManager_H
 #define binManager_H
 
