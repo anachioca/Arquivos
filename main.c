@@ -16,8 +16,16 @@ int main(){
     scanf("%s", arquivoGerado);
   
     FILE *fp, *fpb;
+
+    // checa se os arquivos a serem abertos existem
+    // caso não seja possível abri-los, imprime mensagem de erro
     fp = fopen(arquivoEntrada, "r");
     fpb = fopen(arquivoGerado, "w+b");
+
+    if (fp == NULL || fpb == NULL){
+      printf("Falha no processamento do arquivo.");
+      return 0;
+    }
 
     readCsvHeader(fp); //colocar condição caso o arquivo seja vazio
     InitHeader(fpb); 
@@ -37,7 +45,7 @@ int main(){
         destroyBaby(&a);
     }
 
-    setStatus(fpb);
+    setStatus(fpb); // seta o status do arquivo binário
     fclose(fpb);
     fclose(fp);
 
@@ -46,17 +54,16 @@ int main(){
 
   if (opt == 2){
     scanf("%s", arquivoGerado);
-    baby *b = newBaby();
+    baby *b;
     FILE *fpb;
     
     // checa se o arquivo a ser aberto existe
-    //caso não seja possível abri-lo, imprime mensagem de erro
-    if (fopen(arquivoGerado, "rb") == NULL){
+    // caso não seja possível abri-lo, imprime mensagem de erro
+    fpb = fopen(arquivoGerado, "rb");
+    if (fpb == NULL){
       printf("Falha no processamento do arquivo.");
       return 0;
     }
-
-    fpb = fopen(arquivoGerado, "rb");
 
     //lê as informações do cabeçalho
     header *h = malloc(1*sizeof(header));
@@ -71,11 +78,11 @@ int main(){
 
     //lê os registros e guarda em uma struct baby, imprimindo-a
     for (int i = 0; i < RRN; i++){
-      readReg(fpb, b, i);
+      b = readReg(fpb, i);
       printBaby(b);
+      destroyBaby(&b);
     }
 
-    destroyBaby(&b);
     destroyHeader(&h);
     fclose(fpb);
   }

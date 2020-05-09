@@ -7,12 +7,14 @@
 
 #define reg_size 128
 
+// cria uma struct header
 void InitHeader(FILE *fp){
 	header *h = malloc(1*sizeof(header));
-	char *stat = malloc(1*sizeof(char));
-  	stat = "0";
+	char stat[1];
+  	stat[0] = '0';
 
 	// escreve no header os valores iniciais
+	// inicializa o status como 0
   	strncpy(h->status, stat, 1);
   	h->RRNproxRegistro = 0;
   	h->numeroRegistrosInseridos = 0;
@@ -29,12 +31,14 @@ void InitHeader(FILE *fp){
     WriteTrash(fp, 111);
 }
 
+// apaga uma struct header
 void destroyHeader(header ** head){
   header * h = *head;
   free(*head);
   *head = NULL;
 }
 
+// escreve o caracter '$' em 'qt' bytes do aqruivo binário
 void WriteTrash(FILE *fp, int qt){
 	char trash = '$';
     for(int i = 0; i < qt; i++) // preenche espaço que sobra
@@ -78,6 +82,7 @@ void UpdateHeader(FILE *fp, int opt){
 	fseek(fp, position, SEEK_SET);
 }
 
+// status = 1
 void setStatus(FILE *fp){
 	long position = ftell(fp);
   	fseek(fp, 0, SEEK_SET);
@@ -92,6 +97,7 @@ void setStatus(FILE *fp){
 	fseek(fp, position, SEEK_SET);
 }
 
+// status = 0
 void resetStatus(FILE *fp){
 	long position = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
@@ -106,6 +112,7 @@ void resetStatus(FILE *fp){
 	fseek(fp, position, SEEK_SET);
 }
 
+// retorna o RRNproxRegistro
 int getRRN(FILE *fp){
 	int RRN;
 	fseek(fp, 1, SEEK_SET);
@@ -113,62 +120,77 @@ int getRRN(FILE *fp){
 	return RRN+1;
 }
 
+// escreve um registro no arquivo binário
+// recebe o registro que é uma struct baby
 void WriteReg(FILE *fp, baby *b){
 
 	int RRN = getRRN(fp);
 	fseek(fp, RRN*reg_size, SEEK_SET);
 
+	// comprimento das strings cidadeBebe e cidadeMae
 	int a = strlen(b->cidadeMae);
 	int c = strlen(b->cidadeBebe);
 	int zero = 0;
 	char zero_char = '0';
 	char strvazia = '\0';
 
+	// se cidadeMae for uma string vazia, escreve o int 0 no binário
 	if (b->cidadeMae[0] == '$') {
 		fwrite(&zero, sizeof(int), 1, fp);
 		a = 0;
-	}
+	} // caso contrário escreve o comprimento da string
 	else  fwrite(&a, sizeof(int), 1, fp);
 
+	// se cidadeBebe for uma string vazia, escreve o int 0 no binário
 	if (b->cidadeBebe[0] == '$') {
 		fwrite(&zero, sizeof(int), 1, fp);
 		c = 0;
-	}
+	} // caso contrário escreve o comprimento da string
 	else fwrite(&c, sizeof(int), 1, fp);
 
+	//escreve a cidadeMae e cidadeBebe no binário
 	fwrite(b->cidadeMae, sizeof(char), a, fp);
 	fwrite(b->cidadeBebe, sizeof(char), c, fp);
+
+	// escreve '$', ou seja, lixo, nos bytes que restaram, até o 105 byte do registro (espaço reservado para os campos variáveis)
 	int lixo =  105 - a - c - 8;
 	WriteTrash(fp, lixo);
 
-	
+	//escreve no binário o idNascimento e a idadeMae
 	fwrite(&b->idNascimento, sizeof(int), 1, fp);
 	fwrite(&b->idadeMae, sizeof(int), 1, fp);
 	
+	// se cidadeBebe for uma string vazia, escreve \0 no binário e preenche com $
 	if (b->dataNascimento[0] == '$'){
 		fwrite(&strvazia, sizeof(char), 1, fp);
 		WriteTrash(fp, 9);
-	}
+	} // caso contrário escreve a string dataNascimento
 	else if (b->dataNascimento[0] != '$') fwrite(&b->dataNascimento, sizeof(char), 10, fp);
 
+	// se sexoBebe for uma string vazia, escreve o char '0', sexo ignorado
 	if (b->sexoBebe[0] == '$') fwrite(&zero_char, sizeof(char), 1, fp);
+	// caso contrário escreve a string sexoBebe
 	else fwrite(&b->sexoBebe, sizeof(char), 1, fp);
 
+	// se estadoMae for uma string vazia escreve '/0' e preenche com $ 
 	if (b->estadoMae[0] == '$'){
 		fwrite(&strvazia, sizeof(char), 1, fp);
 		WriteTrash(fp, 1);
-	}
+	} // caso contrário escreve a string estadoMae
 	else if (b->estadoMae[0] != '$') fwrite(&b->estadoMae, sizeof(char), 2, fp);
 	
+	// se estadoBebe for uma string vazia escreve '/0' e preenche com $ 
 	if (b->estadoBebe[0] == '$'){
 		fwrite(&strvazia, sizeof(char), 1, fp);
 		WriteTrash(fp, 1);
-	}
+	} // caso contrário escreve a string estadoBebe
 	else if (b->estadoBebe[0] != '$') fwrite(&b->estadoBebe, sizeof(char), 2, fp);
 
+	// incrementa o RRNproxRegistro e o numeroRegistrosInseridos no header
 	UpdateHeader(fp, 1);
 }
 
+// lê o header de um arquivo binário e retorna uma struct header
 void readHeader(FILE *fp, header *h){
 	fseek(fp, 0, SEEK_SET);
 	fread(&(h->status), sizeof(char), 1, fp);
@@ -178,30 +200,36 @@ void readHeader(FILE *fp, header *h){
 	fread(&(h->numeroRegistrosAtualizados), sizeof(int), 1, fp);
 }
 
-void readReg(FILE *fp, baby *b, int RRN){
+// lê um registro do arquivo binário e coloca as informações em uma struct baby
+baby * readReg(FILE *fp, int RRN){
+	baby *b = newBaby();
+
 	int byteoffset = (RRN+1)*reg_size;
 	fseek(fp, byteoffset, SEEK_SET);
 
-	int a, c; //size of cidadeMae and cidadeBebe
+	//size of cidadeMae and cidadeBebe
+	int a = 0;
+	int c = 0;
 
 	fread(&(a), sizeof(int), 1, fp);
 
+	// verifica se o registro foi removido
 	if (a == -1) {
 		printf("Registro Removido");
-		return;
+		return b;
 	}
 	
 	fread(&(c), sizeof(int), 1, fp);
 	b->cidadeMae = malloc((a+1)*sizeof(char));
 	b->cidadeBebe = malloc((c+1)*sizeof(char));
 
-
 	fread(b->cidadeMae, sizeof(char), a, fp);
 	fread(b->cidadeBebe, sizeof(char), c, fp);
 
-	strcat(b->cidadeMae, "\0");
-	strcat(b->cidadeMae, "\0");
+	b->cidadeMae[a] = '\0';
+	b->cidadeBebe[c] = '\0';
 
+	// pula os bytes reservados para os campos variáveis
 	fseek(fp, byteoffset+105, SEEK_SET);
 
 	fread(&(b->idNascimento), sizeof(int), 1, fp);
@@ -210,6 +238,7 @@ void readReg(FILE *fp, baby *b, int RRN){
 	fread(b->sexoBebe, sizeof(char), 1, fp);
 	fread(b->estadoMae, sizeof(char), 2, fp);
 	fread(b->estadoBebe, sizeof(char), 2, fp);
+	return b;
 }
 
 /*

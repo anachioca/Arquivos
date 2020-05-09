@@ -23,7 +23,7 @@
     int getRRN(FILE *fp);
     void WriteReg(FILE *fp, baby *b);
     void readHeader(FILE *fp, header *h);
-    void readReg(FILE *fp, baby *b, int RRN);
+    baby * readReg(FILE *fp, int RRN);
     void binarioNaTela(char *nomeArquivoBinario);
     void trim(char *str);
     void scan_quote_string(char *str);
