@@ -23,14 +23,6 @@
 
     baby * newBaby();
     void destroyBaby(baby ** Baby);
-    void setcidadeMae(baby *Baby, char *string);
-    void setcidadeBebe(baby *Baby, char *string);
-    void setidNascimento(baby *Baby, int ID);
-    void setidadeMae(baby *Baby, int idade);
-    void setDataNascimento(baby *Baby, char* string);
-    void setsexoBebe(baby *Baby, char *sexo);
-    void setestadoMae(baby *Baby, char* string);
-    void setestadoBebe(baby *Baby, char* string);
     void printBaby(baby * Baby);
     baby * readCsvRow(FILE * fp);
     void readCsvHeader(FILE * fp);
