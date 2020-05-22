@@ -7,7 +7,7 @@ valgrind: prog
 	valgrind --leak-check=full --show-leak-kinds=all ./prog
 
 prog: baby.o binManager.o main.o
-	gcc -o prog -g -Wall -ggdb3 baby.o binManager.o main.o -g
+	gcc -fsanitize=address -o prog -g -Wall -ggdb3 baby.o binManager.o main.o -g
 
 main.o: main.c
 	gcc -c main.c

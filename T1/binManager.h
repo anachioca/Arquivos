@@ -17,14 +17,16 @@
         int numeroRegistrosAtualizados;
     } header;
 
-    void InitHeader(FILE *fp);
+    // void InitHeader(FILE *fp);
+    header * InitHeader();
+    void writeHeader(header *h, FILE *fp);
     void destroyHeader(header ** h);
     void WriteTrash(FILE *fp, int qt);
-    void UpdateHeader(FILE *fp, int opt);
-    void setStatus(FILE *fp);
-    void resetStatus(FILE *fp);
-    int getRRN(FILE *fp);
-    void WriteReg(FILE *fp, baby *b);
+    void UpdateHeader(header *h, int opt);
+    void setStatus(header *h);
+    void resetStatus(header *h);
+    int getRRN(header *h);
+    void WriteReg(header *h, FILE *fp, baby *b);
     void readHeader(FILE *fp, header *h);
     baby * readReg(FILE *fp, int RRN);
     void binarioNaTela(char *nomeArquivoBinario);

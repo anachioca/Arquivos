@@ -31,8 +31,10 @@ int main(){
     }
 
     readCsvHeader(fp); //colocar condição caso o arquivo seja vazio
-    InitHeader(fpb); 
+
     baby *a;
+    header *h = InitHeader(); // inializa o cabeçalho 
+    writeHeader(h, fpb); // escreve o cabeçalho no arquivo binário
 
     long position = ftell(fp); // Salva posição atual
     fseek(fp, 0, SEEK_END); // vai até o fim do arquivo
@@ -44,11 +46,14 @@ int main(){
     //após fazer isso, apaga as informações 
     while (ftell(fp) != end){ 
         a = readCsvRow(fp);
-        WriteReg(fpb, a); 
+        WriteReg(h, fpb, a); 
         destroyBaby(&a);
+        UpdateHeader(h, 1);
     }
 
-    setStatus(fpb); // seta o status do arquivo binário
+    setStatus(h); // seta o status do arquivo binário
+    writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
+    destroyHeader(&h);
     fclose(fpb);
     fclose(fp);
 

@@ -10,8 +10,8 @@
 
 #define reg_size 128
 
-// cria uma struct header
-void InitHeader(FILE *fp){
+// inicializa uma struct header
+header *InitHeader(){
 	header *h = malloc(1*sizeof(header));
 	char stat[1];
   	stat[0] = '0';
@@ -24,13 +24,18 @@ void InitHeader(FILE *fp){
 	h->numeroRegistrosRemovidos = 0;
 	h->numeroRegistrosAtualizados = 0;
 
+	return h;
+}
+
+void writeHeader(header *h, FILE *fp){
+	fseek(fp, 0, SEEK_SET);
+
     fwrite(&(h->status), sizeof(char), 1, fp);
     fwrite(&(h->RRNproxRegistro), sizeof(int), 1, fp);
     fwrite(&(h->numeroRegistrosInseridos), sizeof(int), 1, fp);
     fwrite(&(h->numeroRegistrosRemovidos), sizeof(int), 1, fp);
     fwrite(&(h->numeroRegistrosAtualizados), sizeof(int), 1, fp);
     
-	free(h);
     WriteTrash(fp, 111);
 }
 
@@ -51,16 +56,8 @@ void WriteTrash(FILE *fp, int qt){
 // opt = 1 se um registro foi inserido
 // opt = 0 se um registro foi removido
 // opt = 2 se um registro foi alterado
-void UpdateHeader(FILE *fp, int opt){
-	long position = ftell(fp);
-  	fseek(fp, 1, SEEK_SET);
-	header *h = malloc(1*sizeof(header));
+void UpdateHeader(header *h, int opt){
 
-	fread(&(h->RRNproxRegistro), sizeof(int), 1, fp);
-	fread(&(h->numeroRegistrosInseridos), sizeof(int), 1, fp);
-	fread(&(h->numeroRegistrosRemovidos), sizeof(int), 1, fp);
-	fread(&(h->numeroRegistrosAtualizados), sizeof(int), 1, fp);
-  	
 	if (opt == 1){
 		h->RRNproxRegistro++;
 		h->numeroRegistrosInseridos++;
@@ -75,61 +72,33 @@ void UpdateHeader(FILE *fp, int opt){
 		h->numeroRegistrosAtualizados++;
 	}
 
-	fseek(fp, 1, SEEK_SET);
-    fwrite(&(h->RRNproxRegistro), sizeof(int), 1, fp);
-    fwrite(&(h->numeroRegistrosInseridos), sizeof(int), 1, fp);
-    fwrite(&(h->numeroRegistrosRemovidos), sizeof(int), 1, fp);
-    fwrite(&(h->numeroRegistrosAtualizados), sizeof(int), 1, fp);
-
-	free(h);
-
-	fseek(fp, position, SEEK_SET);
 }
 
 // status = 1
-void setStatus(FILE *fp){
-	long position = ftell(fp);
-  	fseek(fp, 0, SEEK_SET);
-	header *h = malloc(1*sizeof(header));
+void setStatus(header *h){
 	char stat = '1';
 	strncpy(h->status, &stat, 1);
-
-	fwrite(&(h->status), sizeof(char), 1, fp);
-
-	destroyHeader(&h);
-
-	fseek(fp, position, SEEK_SET);
 }
 
 // status = 0
-void resetStatus(FILE *fp){
-	long position = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	header *h = malloc(1*sizeof(header));
+void resetStatus(header *h){
 	char stat = '0';
 	strncpy(h->status, &stat, 1);
-
-	fwrite(&(h->status), sizeof(char), 1, fp);
-
-	destroyHeader(&h);
-
-	fseek(fp, position, SEEK_SET);
 }
 
 // retorna o RRNproxRegistro
-int getRRN(FILE *fp){
+int getRRN(header *h){
 	int RRN;
-	fseek(fp, 1, SEEK_SET);
-	fread(&RRN, sizeof(int), 1, fp);
+	RRN = h->numeroRegistrosInseridos;
 	return RRN+1;
 }
 
 // escreve um registro no arquivo binário
 // recebe o registro que é uma struct baby
-void WriteReg(FILE *fp, baby *b){
+void WriteReg(header *h, FILE *fp, baby *b){
 
-	int RRN = getRRN(fp);
-	fseek(fp, RRN*reg_size, SEEK_SET);
+	//int RRN = getRRN(h);
+	//fseek(fp, RRN*reg_size, SEEK_SET);
 
 	// comprimento das strings cidadeBebe e cidadeMae
 	int a = strlen(b->cidadeMae);
@@ -190,8 +159,6 @@ void WriteReg(FILE *fp, baby *b){
 	} // caso contrário escreve a string estadoBebe
 	else if (b->estadoBebe[0] != '$') fwrite(&b->estadoBebe, sizeof(char), 2, fp);
 
-	// incrementa o RRNproxRegistro e o numeroRegistrosInseridos no header
-	UpdateHeader(fp, 1);
 }
 
 // lê o header de um arquivo binário e retorna uma struct header
