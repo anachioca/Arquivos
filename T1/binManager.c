@@ -172,11 +172,8 @@ void readHeader(FILE *fp, header *h){
 }
 
 // lê um registro do arquivo binário e coloca as informações em uma struct baby
-baby * readReg(FILE *fp, int RRN){
+baby * readReg(FILE *fp){
 	baby *b = newBaby();
-
-	int byteoffset = (RRN+1)*reg_size;
-	fseek(fp, byteoffset, SEEK_SET);
 
 	//size of cidadeMae and cidadeBebe
 	int a = 0;
@@ -187,7 +184,7 @@ baby * readReg(FILE *fp, int RRN){
 	// verifica se o registro foi removido
 	if (a == -1) {
 		printf("Registro Removido");
-		return b;
+		return b; 
 	}
 	
 	fread(&(c), sizeof(int), 1, fp);

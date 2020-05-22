@@ -92,7 +92,7 @@ int main(){
 
     //lê os registros e guarda em uma struct baby, imprimindo-a
     for (int i = 0; i < RRN; i++){
-      b = readReg(fpb, i);
+      b = readReg(fpb);
       printBaby(b);
       destroyBaby(&b);
     }
