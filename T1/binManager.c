@@ -172,8 +172,10 @@ void readHeader(FILE *fp, header *h){
 }
 
 // lê um registro do arquivo binário e coloca as informações em uma struct baby
-baby * readReg(FILE *fp){
+baby * readReg(FILE *fp, int RRN){
 	baby *b = newBaby();
+	int byteoffset = (RRN+1)*reg_size;
+	fseek(fp, byteoffset, SEEK_SET);
 
 	//size of cidadeMae and cidadeBebe
 	int a = 0;
