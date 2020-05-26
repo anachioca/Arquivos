@@ -110,23 +110,25 @@ void insereReg(){
     fpb = fopen(arquivoGerado, "r+b");
     if (fpb == NULL){
       printf("Falha no processamento do arquivo.");
-      return;
+      return 0;
     }
 
     //lê as informações do cabeçalho
-    Header *h = malloc(1*sizeof(Header));
+    header *h = malloc(1*sizeof(header));
     readHeader(fpb, h);
 
     //caso o status seja 0, imprime mensagem de erro
     if(h->status[0] == '0'){
       printf("Falha no processamento do arquivo.");
-      return;
+      return 0;
     }
 
-    setStatusInconsistente(h);
+    printf("numero de registros: %d", h->RRNproxRegistro);
+
+    resetStatus(h);
 
     for (int i = 0; i < n; i++){
-      Baby *b = newBaby();
+      baby *b = newBaby();
       char word[105]; 
 
       scanf("%s", word);
@@ -141,13 +143,16 @@ void insereReg(){
       
       fseek(fpb, 0, SEEK_END); // vai até o fim do arquivo
       
-      writeRegistros(h, fpb, b); 
-      updateHeader(h, 1);
+      WriteReg(h, fpb, b); 
+      UpdateHeader(h, 1);
       destroyBaby(&b);
     }
 
-    setStatusConsistente(h); // seta o status do arquivo binário
+    printf("numero de registros: %d", h->RRNproxRegistro);
+    setStatus(h); // seta o status do arquivo binário
+
     writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
+
     destroyHeader(&h);
     fclose(fpb);
 }

@@ -7,7 +7,7 @@ valgrind: prog
 	valgrind --leak-check=full --show-leak-kinds=all ./prog
 
 prog: baby.o binManager.o main.o
-	gcc -fsanitize=address -o prog -g -Wall -ggdb3 baby.o binManager.o main.o -g
+	gcc -o prog -g -Wall -ggdb3 baby.o binManager.o main.o -g
 
 main.o: main.c
 	gcc -c main.c
@@ -20,6 +20,3 @@ baby.o: baby.c
 
 clean: 
 	rm -rf *o prog
-
-zip:
-	zip trab.zip *.c *.h Makefile
