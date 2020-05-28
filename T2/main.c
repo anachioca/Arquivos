@@ -104,6 +104,61 @@ void imprimeBin(){
 //   }
 // }
 
+Baby * readInputBaby(){
+  Baby *b = newBaby();
+  char strCidadeMae[105]; 
+  char strCidadeBebe[105]; 
+  char c;
+  getchar();
+
+  // Cidade Mãe:
+  // se o primeiro caracter for '"', le até o próximo '"'
+  // se for 'N', b->cidadeMae é NULO
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", strCidadeMae);
+    b->cidadeMae = malloc(strlen(strCidadeMae) * sizeof(char));
+    strncpy(b->cidadeMae, strCidadeMae, strlen(strCidadeMae));
+  }
+
+  else{
+    char nulo[1] = "$";
+    b->cidadeMae = malloc(1 * sizeof(char));
+    strncpy(b->cidadeMae, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  // pula o '"' final da string cidadeMae e o espaço antes da próxima string 
+  getchar();
+  getchar();
+
+  // Cidade Bebe:
+  // se o primeiro caracter for '"', le até o próximo '"'
+  // se for 'N', b->cidadeBebe é NULO
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", strCidadeBebe);
+    getchar();
+    getchar();
+    b->cidadeBebe = malloc(strlen(strCidadeBebe) * sizeof(char));
+    strncpy(b->cidadeBebe, strCidadeBebe, strlen(strCidadeBebe));
+  }
+
+  else{
+    char nulo[1] = "$";
+    b->cidadeBebe = malloc(1 * sizeof(char));
+    strncpy(b->cidadeMae, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+
+  scanf("%d %d %s %s %s %s", &b->idNascimento, &b->idadeMae, b->dataNascimento, b->sexoBebe, b->estadoMae, b->estadoBebe);
+  return b;
+}
+
 void insereReg(){
     char arquivoGerado[100];
     scanf("%s", arquivoGerado);
@@ -132,78 +187,14 @@ void insereReg(){
     setStatusInconsistente(h);
 
     for (int i = 0; i < n; i++){
-      Baby *b = newBaby();
-      char strCidadeMae[105]; 
-      char strCidadeBebe[105]; 
-      char c;
-      getchar();
-
-      // Cidade Mãe:
-      // se o primeiro caracter for '"', le até o próximo '"'
-      // se for 'N', b->cidadeMae é NULO
-      scanf("%c", &c);
-      if (c == '"'){
-        scanf("%[^\"]", strCidadeMae);
-        b->cidadeMae = malloc(strlen(strCidadeMae) * sizeof(char));
-        strncpy(b->cidadeMae, strCidadeMae, strlen(strCidadeMae));
-        printf("%s\n", strCidadeMae);
-      }
-
-      else{
-        b->cidadeMae = malloc(1 * sizeof(char));
-        b->cidadeMae = "$";
-        getchar();
-        getchar();
-        printf("NULO\n");
-      }
-
-      // pula o '"' final da string cidadeMae e o espaço antes da próxima string 
-      getchar();
-      getchar();
-
-      // Cidade Bebe:
-      // se o primeiro caracter for '"', le até o próximo '"'
-      // se for 'N', b->cidadeBebe é NULO
-      scanf("%c", &c);
-      if (c == '"'){
-        scanf("%[^\"]", strCidadeBebe);
-        getchar();
-        getchar();
-        b->cidadeBebe = malloc(strlen(strCidadeBebe) * sizeof(char));
-        strncpy(b->cidadeBebe, strCidadeBebe, strlen(strCidadeBebe));
-        printf("%s\n", strCidadeBebe);
-      }
-
-      else{
-        b->cidadeBebe = malloc(1 * sizeof(char));
-        b->cidadeBebe = "$";
-        getchar();
-        getchar();
-        printf("NULO\n");
-      }
-
-      // scanf("%[^\n]",word);
-
-      // if (word[0] == '"'){
-      //    findEndOfString(word);
-      //   b->cidadeMae = malloc(strlen(word) * sizeof(char));
-      //   strncpy(b->cidadeMae, word, strlen(word));
-      // }
-      
-      // scanf("%s", word);
-      // b->cidadeMae = malloc(strlen(word) * sizeof(char));
-      // strncpy(b->cidadeMae, word, strlen(word));
-
-      // scanf("%s", word);
-      // b->cidadeBebe = malloc(strlen(word) * sizeof(char));
-      // strncpy(b->cidadeBebe, word, strlen(word));
-
-      scanf("%d %d %s %s %s %s", &b->idNascimento, &b->idadeMae, b->dataNascimento, b->sexoBebe, b->estadoMae, b->estadoBebe);
-      
+      Baby *b;
+      b = readInputBaby(); // lê o input do teclado e coloca em uma struct Baby
+      printBaby(b);
+    
       fseek(fpb, 0, SEEK_END); // vai até o fim do arquivo
       
-      writeRegistros(h, fpb, b); 
-      updateHeader(h, 1);
+      writeRegistros(h, fpb, b); // escreve a struct baby no arquivo binário
+      updateHeader(h, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
       destroyBaby(&b);
     }
 
@@ -214,49 +205,6 @@ void insereReg(){
 }
 
 int main(){
-
-
-  // char strCidadeMae[105]; 
-  // char strCidadeBebe[105]; 
-  // char c;
-
-  // // Cidade Mãe:
-  // // se o primeiro caracter for '"', le até o próximo '"'
-  // // se for 'N', b->cidadeMae é NULO
-  // scanf("%c", &c);
-  // if (c == '"'){
-  //   scanf("%[^\"]", strCidadeMae);
-  //   //b->cidadeMae = malloc(strlen(strCidadeMae) * sizeof(char));
-  //   //strncpy(b->cidadeMae, strCidadeMae, strlen(strCidadeMae));
-  //   printf("%s", strCidadeMae);
-  // }
-
-  // else if (c == 'N'){
-  //   //b->cidadeMae = malloc(1 * sizeof(char));
-  //   //b->cidadeMae = "$";
-  //   getchar();
-  //   getchar();
-  //   printf("NULO");
-  // }
-
-  // getchar();
-  // getchar();
-
-  // scanf("%c", &c);
-  // if (c == '"'){
-  //   scanf("%[^\"]", strCidadeMae);
-  //   //b->cidadeMae = malloc(strlen(strCidadeMae) * sizeof(char));
-  //   //strncpy(b->cidadeMae, strCidadeMae, strlen(strCidadeMae));
-  //   printf("%s", strCidadeMae);
-  // }
-
-  // else if (c == 'N'){
-  //   //b->cidadeMae = malloc(1 * sizeof(char));
-  //   //b->cidadeMae = "$";
-  //   getchar();
-  //   getchar();
-  //   printf("NULO");
-  // }
 
   int opcao;
 
