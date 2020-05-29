@@ -33,7 +33,9 @@ void setStatusInconsistente(Header * header);
 
 int getRRN(Header * header);
 
-void writeRegistros(Header * header, FILE *fp, Baby * baby);
+int atualizaRegistros(FILE * FP, int RRN, Header * h);
+
+void writeRegistros(Header * header, FILE *fp, Baby * baby, int RRN);
 
 void readHeader(FILE *fp, Header * header);
 

@@ -41,7 +41,7 @@ void leCsv(){
   //após fazer isso, apaga as informações 
   while (ftell(csv) != fimDoArquivo){ 
       baby = readCsvRow(csv);
-      writeRegistros(header, binario, baby); 
+      writeRegistros(header, binario, baby, -1); 
       destroyBaby(&baby);
       updateHeader(header, 1);
   }
@@ -97,12 +97,6 @@ void imprimeBin(){
   destroyHeader(&header);
   fclose(binario);
 }
-
-// int findEndOfString(char *str){
-//   for (int i = 1; i < 150; i++){
-//     if (str[i] == '"') return i;
-//   }
-// }
 
 Baby * readInputBaby(){
   Baby *b = newBaby();
@@ -193,7 +187,7 @@ void insereReg(){
     
       fseek(fpb, 0, SEEK_END); // vai até o fim do arquivo
       
-      writeRegistros(h, fpb, b); // escreve a struct baby no arquivo binário
+      writeRegistros(h, fpb, b, -1); // escreve a struct baby no arquivo binário
       updateHeader(h, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
       destroyBaby(&b);
     }
@@ -202,6 +196,50 @@ void insereReg(){
     writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
     destroyHeader(&h);
     fclose(fpb);
+}
+
+void atualizaReg(){
+    char arquivoGerado[100];
+    scanf("%s", arquivoGerado);
+    int n; // número de registros a serem inseridos
+    int RRN; // RRN a ser digitado pelo usuário
+    scanf("%d", &n);
+    FILE *fpb;
+    
+    // checa se o arquivo a ser aberto existe
+    // caso não seja possível abri-lo, imprime mensagem de erro
+    fpb = fopen(arquivoGerado, "r+b");
+    if (fpb == NULL){
+      printf("Falha no processamento do arquivo.");
+      return;
+    }
+
+    //lê as informações do cabeçalho
+    Header *h = malloc(1*sizeof(Header));
+    readHeader(fpb, h);
+
+    //caso o status seja 0, imprime mensagem de erro
+    if(h->status[0] == '0'){
+      printf("Falha no processamento do arquivo.");
+      return;
+    }
+
+    setStatusInconsistente(h);
+
+    for (int i = 0; i < n; i++){
+      scanf("%d", &RRN);
+      if (RRN > h->RRNproxRegistro) break;
+      if (atualizaRegistros(fpb, RRN, h) == 0) {
+        updateHeader(h, 2); // incrementa no header a quantidade de arquivos atualizados
+        //destroyBaby(&b);
+      }
+    }
+
+    setStatusConsistente(h); // seta o status do arquivo binário
+    writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
+    destroyHeader(&h);
+    fclose(fpb);
+    binarioNaTela(arquivoGerado);
 }
 
 int main(){
@@ -220,6 +258,10 @@ int main(){
 
   if (opcao == 6){
     insereReg();
+  }
+
+  if (opcao == 7){
+    atualizaReg();
   }
 
   return 0;

@@ -94,12 +94,87 @@ int getRRN(Header * header){
 	return RRN+1;
 }
 
+int atualizaRegistros(FILE * fp, int RRN, Header * h){
+	fseek(fp, RRN*reg_size, SEEK_SET);
+	int a = 0, m;
+	fread(&(a), sizeof(int), 1, fp);
+
+	// verifica se o registro foi removido
+	if (a == -1) {
+		return -1; 
+	}
+	printf("oi\n");
+
+	Baby *b = readRegistros(fp, RRN);
+	printBaby(b);
+	scanf("%d", &m);
+	printf("m: %d\n", m);
+
+	for (int i = 0; i < m; i++){
+		printf("oi\n");
+		char campo[20];
+		char valor[105];
+		char c;
+		getchar();
+		scanf("%s", campo);
+		printf("campo: %s\n", campo);
+		getchar();
+
+		scanf("%c", &c);
+			if (c == '"'){
+				scanf("%[^\"]", valor);
+			}
+
+			else{
+				valor[0] = '$';
+				valor[1] = '\0';
+			}
+
+		if (strcmp(campo, "cidadeMae") == 0){
+			b->cidadeMae = malloc(strlen(valor) * sizeof(char));
+			strncpy(b->cidadeMae, valor, strlen(valor));
+		}	
+		else if (strcmp(campo, "cidadeBebe") == 0){
+			printf("cidadeBebe: %s\n", valor);
+			b->cidadeBebe = malloc(strlen(valor) * sizeof(char));
+			strncpy(b->cidadeBebe, valor, strlen(valor));
+		}
+		else if (strcmp(campo, "idNascimento") == 0){
+			if (valor[0] == '$') b->idNascimento = -1;
+			else b->idNascimento = atoi(valor);
+		}
+		else if (strcmp(campo, "idadeMae") == 0){
+			if (valor[0] == '$') b->idadeMae = -1;
+			else b->idadeMae = atoi(valor);
+		}
+		else if (strcmp(campo, "dataNascimento") == 0){
+			strncpy(b->dataNascimento, valor, 10);
+		}
+		else if (strcmp(campo, "sexoBebe") == 0){
+			strncpy(b->sexoBebe, valor, 1);
+		}
+		else if (strcmp(campo, "estadoBebe") == 0){
+			strncpy(b->sexoBebe, valor, 2);
+		}
+		else if (strcmp(campo, "estadoMae") == 0){
+			strncpy(b->sexoBebe, valor, 2);
+		}
+
+		getchar();
+	}
+
+	writeRegistros(h, fp, b, RRN);
+	printBaby(b);
+	destroyBaby(&b);
+	return 0;
+}
+
 // escreve um registro no arquivo binário
 // recebe o registro que é uma struct baby
-void writeRegistros(Header * header, FILE * fp, Baby * baby){
+// se RRN != -1, da fseek para aquele RRN (para a funcionalidade 7)
+void writeRegistros(Header * header, FILE * fp, Baby * baby, int RRN){
 
-	//int RRN = getRRN(h);
-	//fseek(fp, RRN*reg_size, SEEK_SET);
+	if (RRN != -1) fseek(fp, (RRN+1)*reg_size, SEEK_SET);
 
 	// comprimento das strings cidadeBebe e cidadeMae
 	int a = strlen(baby -> cidadeMae);
