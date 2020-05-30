@@ -21,7 +21,7 @@ void leCsv(){
   binario = fopen(arquivoGerado, "w+b");
 
   if (csv == NULL || binario == NULL){
-    printf("Falha no processamento do arquivo.");
+    printf("Falha no carregamento do arquivo.");
     return;
   }
 
@@ -103,6 +103,10 @@ Baby * readInputBaby(){
   char strCidadeMae[105]; 
   char strCidadeBebe[105]; 
   char c;
+  char valor[10];
+  char nulo[2];
+  nulo[0] = '$';
+  nulo[1] = '\0';
   getchar();
 
   // Cidade Mãe:
@@ -113,10 +117,10 @@ Baby * readInputBaby(){
     scanf("%[^\"]", strCidadeMae);
     b->cidadeMae = malloc(strlen(strCidadeMae) * sizeof(char));
     strncpy(b->cidadeMae, strCidadeMae, strlen(strCidadeMae));
+    b -> cidadeMae[strlen(strCidadeMae)] = '\0';
   }
 
   else{
-    char nulo[1] = "$";
     b->cidadeMae = malloc(1 * sizeof(char));
     strncpy(b->cidadeMae, nulo, 1);
     getchar();
@@ -137,19 +141,94 @@ Baby * readInputBaby(){
     getchar();
     b->cidadeBebe = malloc(strlen(strCidadeBebe) * sizeof(char));
     strncpy(b->cidadeBebe, strCidadeBebe, strlen(strCidadeBebe));
+    b -> cidadeBebe[strlen(strCidadeBebe)] = '\0';
   }
 
   else{
-    char nulo[1] = "$";
     b->cidadeBebe = malloc(1 * sizeof(char));
     strncpy(b->cidadeMae, nulo, 1);
+    getchar();
+    getchar();
+    getchar();
+  }
+
+  //scanf("%d %d %s %s %s %s", &b->idNascimento, &b->idadeMae, b->dataNascimento, b->sexoBebe, b->estadoMae, b->estadoBebe);
+
+  //idNascimento:
+  scanf("%s", valor);
+  if (valor[0] == 'N') b->idNascimento = -1;
+  else b->idNascimento = atoi(valor);
+
+  //idadeMae
+  scanf("%s", valor);
+  if (valor[0] == 'N') b->idadeMae = -1;
+  else b->idadeMae = atoi(valor);
+
+  getchar();
+
+  //dataNascimento
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->dataNascimento, valor, 10);
+  }
+
+  else{
+    strncpy(b->dataNascimento, nulo, 1);
     getchar();
     getchar();
   }
 
   getchar();
+  getchar();
 
-  scanf("%d %d %s %s %s %s", &b->idNascimento, &b->idadeMae, b->dataNascimento, b->sexoBebe, b->estadoMae, b->estadoBebe);
+  //sexoBebe
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->sexoBebe, valor, 1);
+  }
+
+  else{
+    strncpy(b->sexoBebe, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+  getchar();
+  
+  //estadoMae
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->estadoMae, valor, 2);
+  }
+
+  else{
+    strncpy(b->estadoMae, nulo, 2);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+  getchar();
+  
+  //estadoBebe
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->estadoBebe, valor, 2);
+  }
+
+  else{
+    strncpy(b->estadoBebe, nulo, 2);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+    
   return b;
 }
 
@@ -183,12 +262,11 @@ void insereReg(){
     for (int i = 0; i < n; i++){
       Baby *b;
       b = readInputBaby(); // lê o input do teclado e coloca em uma struct Baby
-      printBaby(b);
-    
       fseek(fpb, 0, SEEK_END); // vai até o fim do arquivo
       
       writeRegistros(h, fpb, b, -1); // escreve a struct baby no arquivo binário
       updateHeader(h, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
+      //printBaby(b);
       destroyBaby(&b);
     }
 
@@ -196,6 +274,7 @@ void insereReg(){
     writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
     destroyHeader(&h);
     fclose(fpb);
+    binarioNaTela(arquivoGerado);
 }
 
 void atualizaReg(){
@@ -229,14 +308,21 @@ void atualizaReg(){
     for (int i = 0; i < n; i++){
       scanf("%d", &RRN);
       if (RRN > h->RRNproxRegistro) break;
+      Baby * b = readRegistros(fpb, RRN);
+      // printf("\nANTIGO: \n");
+      // printBabyFull(b);
       if (atualizaRegistros(fpb, RRN, h) == 0) {
         updateHeader(h, 2); // incrementa no header a quantidade de arquivos atualizados
         //destroyBaby(&b);
+        b = readRegistros(fpb, RRN);
+        // printf("\nNOVO: \n");
+        // printBabyFull(b);
       }
     }
 
     setStatusConsistente(h); // seta o status do arquivo binário
     writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
+  
     destroyHeader(&h);
     fclose(fpb);
     binarioNaTela(arquivoGerado);

@@ -21,6 +21,8 @@ Header * initHeader();
 
 void writeHeader(Header * header, FILE *fp);
 
+void printHeader(Header * h);
+
 void destroyHeader(Header ** header);
 
 void writeTrash(FILE *fp, int qt);
