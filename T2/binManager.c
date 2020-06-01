@@ -178,6 +178,7 @@ int atualizaRegistros(FILE * fp, int RRN, Header * h){
 	}
 
 	writeRegistros(h, fp, b, RRN);
+	printBaby(b);
 	destroyBaby(&b);
 	return 0;
 }
@@ -259,6 +260,138 @@ void readHeader(FILE *fp, Header * header){
 	fread(&(header -> numeroRegistrosInseridos), sizeof(int), 1, fp);
 	fread(&(header -> numeroRegistrosRemovidos), sizeof(int), 1, fp);
 	fread(&(header -> numeroRegistrosAtualizados), sizeof(int), 1, fp);
+}
+
+Baby * readInputBaby(){
+  Baby *b = newBaby();
+  char strCidadeMae[105]; 
+  char strCidadeBebe[105]; 
+  char c;
+  char valor[10];
+  char nulo[2];
+  nulo[0] = '$';
+  nulo[1] = '\0';
+  getchar();
+
+  // Cidade Mãe:
+  // se o primeiro caracter for '"', le até o próximo '"'
+  // se for 'N', b->cidadeMae é NULO
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", strCidadeMae);
+    b->cidadeMae = malloc(strlen(strCidadeMae) * sizeof(char));
+    strncpy(b->cidadeMae, strCidadeMae, strlen(strCidadeMae));
+    b -> cidadeMae[strlen(strCidadeMae)] = '\0';
+  }
+
+  else{
+    b->cidadeMae = malloc(1 * sizeof(char));
+    strncpy(b->cidadeMae, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  // pula o '"' final da string cidadeMae e o espaço antes da próxima string 
+  getchar();
+  getchar();
+
+  // Cidade Bebe:
+  // se o primeiro caracter for '"', le até o próximo '"'
+  // se for 'N', b->cidadeBebe é NULO
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", strCidadeBebe);
+    getchar();
+    getchar();
+    b->cidadeBebe = malloc(strlen(strCidadeBebe) * sizeof(char));
+    strncpy(b->cidadeBebe, strCidadeBebe, strlen(strCidadeBebe));
+    b -> cidadeBebe[strlen(strCidadeBebe)] = '\0';
+  }
+
+  else{
+    b->cidadeBebe = malloc(1 * sizeof(char));
+    strncpy(b->cidadeMae, nulo, 1);
+    getchar();
+    getchar();
+    getchar();
+  }
+
+  //idNascimento:
+  scanf("%s", valor);
+  if (valor[0] == 'N') b->idNascimento = -1;
+  else b->idNascimento = atoi(valor);
+
+  //idadeMae
+  scanf("%s", valor);
+  if (valor[0] == 'N') b->idadeMae = -1;
+  else b->idadeMae = atoi(valor);
+
+  getchar();
+
+  //dataNascimento
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->dataNascimento, valor, 10);
+  }
+
+  else{
+    strncpy(b->dataNascimento, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+  getchar();
+
+  //sexoBebe
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->sexoBebe, valor, 1);
+  }
+
+  else{
+    strncpy(b->sexoBebe, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+  getchar();
+  
+  //estadoMae
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->estadoMae, valor, 2);
+  }
+
+  else{
+    strncpy(b->estadoMae, nulo, 2);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+  getchar();
+  
+  //estadoBebe
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->estadoBebe, valor, 2);
+  }
+
+  else{
+    strncpy(b->estadoBebe, nulo, 2);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+    
+  return b;
 }
 
 // lê um registro do arquivo binário e coloca as informações em uma struct baby
