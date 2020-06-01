@@ -21,7 +21,7 @@ void leCsv(){
   binario = fopen(arquivoGerado, "w+b");
 
   if (csv == NULL || binario == NULL){
-    printf("Falha no processamento do arquivo.");
+    printf("Falha no carregamento do arquivo.");
     return;
   }
 
@@ -41,7 +41,7 @@ void leCsv(){
   //após fazer isso, apaga as informações 
   while (ftell(csv) != fimDoArquivo){ 
       baby = readCsvRow(csv);
-      writeRegistros(header, binario, baby); 
+      writeRegistros(header, binario, baby, -1); 
       destroyBaby(&baby);
       updateHeader(header, 1);
   }
@@ -98,6 +98,95 @@ void imprimeBin(){
   fclose(binario);
 }
 
+void insereReg(){
+    char arquivoGerado[100];
+    scanf("%s", arquivoGerado);
+    int n; // número de registros a serem inseridos
+    scanf("%d", &n);
+    FILE *fpb;
+    
+    // checa se o arquivo a ser aberto existe
+    // caso não seja possível abri-lo, imprime mensagem de erro
+    fpb = fopen(arquivoGerado, "r+b");
+    if (fpb == NULL){
+      printf("Falha no processamento do arquivo.");
+      return;
+    }
+
+    //lê as informações do cabeçalho
+    Header *h = malloc(1*sizeof(Header));
+    readHeader(fpb, h);
+
+    //caso o status seja 0, imprime mensagem de erro
+    if(h->status[0] == '0'){
+      printf("Falha no processamento do arquivo.");
+      return;
+    }
+
+    setStatusInconsistente(h);
+
+    for (int i = 0; i < n; i++){
+      Baby *b;
+      b = readInputBaby(); // lê o input do teclado e coloca em uma struct Baby
+      fseek(fpb, 0, SEEK_END); // vai até o fim do arquivo
+      
+      writeRegistros(h, fpb, b, -1); // escreve a struct baby no arquivo binário
+      updateHeader(h, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
+      //printBaby(b);
+      destroyBaby(&b);
+    }
+
+    setStatusConsistente(h); // seta o status do arquivo binário
+    writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
+    destroyHeader(&h);
+    fclose(fpb);
+    binarioNaTela(arquivoGerado);
+}
+
+void atualizaReg(){
+    char arquivoGerado[100];
+    scanf("%s", arquivoGerado);
+    int n; // número de registros a serem inseridos
+    int RRN; // RRN a ser digitado pelo usuário
+    scanf("%d", &n);
+    FILE *fpb;
+    
+    // checa se o arquivo a ser aberto existe
+    // caso não seja possível abri-lo, imprime mensagem de erro
+    fpb = fopen(arquivoGerado, "r+b");
+    if (fpb == NULL){
+      printf("Falha no processamento do arquivo.");
+      return;
+    }
+
+    //lê as informações do cabeçalho
+    Header *h = malloc(1*sizeof(Header));
+    readHeader(fpb, h);
+
+    //caso o status seja 0, imprime mensagem de erro
+    if(h->status[0] == '0'){
+      printf("Falha no processamento do arquivo.");
+      return;
+    }
+
+    setStatusInconsistente(h);
+
+    for (int i = 0; i < n; i++){
+      scanf("%d", &RRN);
+      if (RRN > h->RRNproxRegistro) break;
+      if (atualizaRegistros(fpb, RRN, h) == 0) {
+        updateHeader(h, 2); // incrementa no header a quantidade de arquivos atualizados
+      }
+    }
+
+    setStatusConsistente(h); // seta o status do arquivo binário
+    writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
+  
+    destroyHeader(&h);
+    fclose(fpb);
+    binarioNaTela(arquivoGerado);
+}
+
 int main(){
 
   int opcao;
@@ -112,17 +201,13 @@ int main(){
     imprimeBin();
   }
 
+  if (opcao == 6){
+    insereReg();
+  }
+
+  if (opcao == 7){
+    atualizaReg();
+  }
+
   return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-

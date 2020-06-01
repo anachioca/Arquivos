@@ -15,10 +15,10 @@ struct info{
     char * cidadeBebe;  //campo de tamanho variável
     int idNascimento;
     int idadeMae;
-    char dataNascimento[10];
-    char sexoBebe[1];
-    char estadoMae[2];
-    char estadoBebe[2];
+    char dataNascimento[11];
+    char sexoBebe[2];
+    char estadoMae[3];
+    char estadoBebe[3];
 };
 
 Baby * newBaby();
@@ -26,6 +26,8 @@ Baby * newBaby();
 void destroyBaby(Baby ** Baby);
 
 void printBaby(Baby * Baby);
+
+void printBabyFull(Baby * b);
 
 Baby * readCsvRow(FILE * fp);
 

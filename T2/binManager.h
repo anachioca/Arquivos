@@ -21,6 +21,8 @@ Header * initHeader();
 
 void writeHeader(Header * header, FILE *fp);
 
+void printHeader(Header * h);
+
 void destroyHeader(Header ** header);
 
 void writeTrash(FILE *fp, int qt);
@@ -33,9 +35,13 @@ void setStatusInconsistente(Header * header);
 
 int getRRN(Header * header);
 
-void writeRegistros(Header * header, FILE *fp, Baby * baby);
+int atualizaRegistros(FILE * FP, int RRN, Header * h);
+
+void writeRegistros(Header * header, FILE *fp, Baby * baby, int RRN);
 
 void readHeader(FILE *fp, Header * header);
+
+Baby * readInputBaby();
 
 Baby * readRegistros(FILE *fp, int RRN);
 
