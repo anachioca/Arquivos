@@ -84,10 +84,10 @@ void printBabyFull(Baby * b){
   printf("cidadeBebe: %s\n", b->cidadeBebe);
   printf("idNascimento: %d\n", b->idNascimento);
   printf("idadeMae: %d\n", b->idadeMae);
-  printf("dataNascimento: %.10s\n", b->dataNascimento);
-  printf("sexoBebe: %.1s\n", b->sexoBebe);
-  printf("estadoMae: %.2s\n", b->estadoMae);
-  printf("estadoBebe: %.2s\n", b->estadoBebe);
+  printf("dataNascimento: %s\n", b->dataNascimento);
+  printf("sexoBebe: %s\n", b->sexoBebe);
+  printf("estadoMae: %s\n", b->estadoMae);
+  printf("estadoBebe: %s\n", b->estadoBebe);
 }
 
 // Le uma linha inteira do .csv e coloca cada informação em um lugar da struct Baby criada
@@ -102,19 +102,23 @@ Baby * readCsvRow(FILE * fp){
 
   char * line = csvNextLine(fp);
   strncpy(baby -> dataNascimento, line, 10);
+  baby -> dataNascimento[10] = '\0';
   free(line);
 
   line = csvNextLine(fp);
   strncpy(baby -> sexoBebe, line, 1);
+  baby -> sexoBebe[1] = '\0';
   free(line);
 
   line = csvNextLine(fp);
   strncpy(baby -> estadoMae, line, 2);
+  baby -> estadoMae[2] = '\0';
   free(line);
 
   // usa a função csvUntilNextLine pois o final do estadoBebe é marcado por um \n, e não por uma vírgula
   line = csvUntilNextLine(fp);
   strncpy(baby -> estadoBebe, line, 2);
+  baby -> estadoBebe[2] = '\0';
   free(line);
 
   return baby;
