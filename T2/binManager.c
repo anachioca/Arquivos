@@ -41,6 +41,14 @@ void writeHeader(Header * header, FILE * fp){
     writeTrash(fp, 111);
 }
 
+void printHeader(Header * h){
+	printf("\nstatus: %.1s\n", h->status);
+	printf("RRNproxReg: %d\n", h->RRNproxRegistro);
+	printf("NumeroRegistrosInseridos: %d\n", h->numeroRegistrosInseridos);
+	printf("NumeroRegistrosRemovidos: %d\n", h->numeroRegistrosRemovidos);
+	printf("NumeroRegistrosAtualizados: %d\n", h->numeroRegistrosAtualizados);
+}
+
 // apaga uma struct Header
 void destroyHeader(Header ** head){
   Header * h = *head;
@@ -95,12 +103,92 @@ int getRRN(Header * header){
 	return RRN+1;
 }
 
+int atualizaRegistros(FILE * fp, int RRN, Header * h){
+	fseek(fp, RRN*reg_size, SEEK_SET);
+	int a = 0, m;
+	fread(&(a), sizeof(int), 1, fp);
+
+	// verifica se o registro foi removido
+	if (a == -1) {
+		return -1; 
+	}
+
+	Baby *b = readRegistros(fp, RRN);
+	scanf("%d", &m);
+
+	for (int i = 0; i < m; i++){
+		char campo[20];
+		char valor[105];
+		char c;
+		getchar();
+		scanf("%s", campo);
+		getchar();
+
+		scanf("%c", &c);
+			if (c == '"'){
+				scanf("%[^\"]", valor);
+			}
+
+			else{
+				valor[0] = '$';
+				valor[1] = '\0';
+			}
+
+		if (strcmp(campo, "cidadeMae") == 0){
+			b->cidadeMae = malloc(strlen(valor) * sizeof(char));
+			strncpy(b->cidadeMae, valor, strlen(valor));
+		}	
+		else if (strcmp(campo, "cidadeBebe") == 0){
+			b->cidadeBebe = malloc(strlen(valor) * sizeof(char));
+			strncpy(b->cidadeBebe, valor, strlen(valor));
+		}
+		else if (strcmp(campo, "idNascimento") == 0){
+			if (valor[0] == '$') b->idNascimento = -1;
+			else b->idNascimento = atoi(valor);
+		}
+		else if (strcmp(campo, "idadeMae") == 0){
+			if (valor[0] == '$') b->idadeMae = -1;
+			else b->idadeMae = atoi(valor);
+		}
+		else if (strcmp(campo, "dataNascimento") == 0){
+			if (c == '"') strncpy(b->dataNascimento, valor, 10);
+			else {
+				valor[0] = '\0';
+				strncpy(b->dataNascimento, valor, 1);
+			}
+		}
+		else if (strcmp(campo, "sexoBebe") == 0){
+			strncpy(b->sexoBebe, valor, 1);
+		}
+		else if (strcmp(campo, "estadoBebe") == 0){
+			if (c == '"') strncpy(b->estadoBebe, valor, 2);
+			else {
+				valor[0] = '\0';
+				strncpy(b->estadoBebe, valor, 1);
+			}	
+		}
+		else if (strcmp(campo, "estadoMae") == 0){
+			if (c == '"') strncpy(b->estadoMae, valor, 2);
+			else {
+				valor[0] = '\0';
+				strncpy(b->estadoMae, valor, 1);
+			}
+		}
+
+		getchar();
+	}
+
+	writeRegistros(h, fp, b, RRN);
+	destroyBaby(&b);
+	return 0;
+}
+
 // escreve um registro no arquivo binário
 // recebe o registro que é uma struct baby
-void writeRegistros(Header * header, FILE * fp, Baby * baby){
+// se RRN != -1, da fseek para aquele RRN (para a funcionalidade 7)
+void writeRegistros(Header * header, FILE * fp, Baby * baby, int RRN){
 
-	//int RRN = getRRN(h);
-	//fseek(fp, RRN*reg_size, SEEK_SET);
+	if (RRN != -1) fseek(fp, (RRN+1)*reg_size, SEEK_SET);
 
 	// comprimento das strings cidadeBebe e cidadeMae
 	int a = strlen(baby -> cidadeMae);
@@ -129,7 +217,8 @@ void writeRegistros(Header * header, FILE * fp, Baby * baby){
 
 	// escreve '$', ou seja, lixo, nos bytes que restaram, até o 105 byte do registro (espaço reservado para os campos variáveis)
 	int lixo =  105 - a - c - 8;
-	writeTrash(fp, lixo);
+	if (RRN == -1) writeTrash(fp, lixo);
+	else fseek(fp, ((RRN+1)*reg_size) + 105, SEEK_SET);
 
 	//escreve no binário o idNascimento e a idadeMae
 	fwrite(&baby -> idNascimento, sizeof(int), 1, fp);
@@ -173,6 +262,138 @@ void readHeader(FILE *fp, Header * header){
 	fread(&(header -> numeroRegistrosAtualizados), sizeof(int), 1, fp);
 }
 
+Baby * readInputBaby(){
+  Baby *b = newBaby();
+  char strCidadeMae[105]; 
+  char strCidadeBebe[105]; 
+  char c;
+  char valor[10];
+  char nulo[2];
+  nulo[0] = '$';
+  nulo[1] = '\0';
+  getchar();
+
+  // Cidade Mãe:
+  // se o primeiro caracter for '"', le até o próximo '"'
+  // se for 'N', b->cidadeMae é NULO
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", strCidadeMae);
+    b->cidadeMae = malloc(strlen(strCidadeMae) * sizeof(char));
+    strncpy(b->cidadeMae, strCidadeMae, strlen(strCidadeMae));
+    b -> cidadeMae[strlen(strCidadeMae)] = '\0';
+  }
+
+  else{
+    b->cidadeMae = malloc(1 * sizeof(char));
+    strncpy(b->cidadeMae, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  // pula o '"' final da string cidadeMae e o espaço antes da próxima string 
+  getchar();
+  getchar();
+
+  // Cidade Bebe:
+  // se o primeiro caracter for '"', le até o próximo '"'
+  // se for 'N', b->cidadeBebe é NULO
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", strCidadeBebe);
+    getchar();
+    getchar();
+    b->cidadeBebe = malloc(strlen(strCidadeBebe) * sizeof(char));
+    strncpy(b->cidadeBebe, strCidadeBebe, strlen(strCidadeBebe));
+    b -> cidadeBebe[strlen(strCidadeBebe)] = '\0';
+  }
+
+  else{
+    b->cidadeBebe = malloc(1 * sizeof(char));
+    strncpy(b->cidadeBebe, nulo, 1);
+    getchar();
+    getchar();
+    getchar();
+  }
+
+  //idNascimento:
+  scanf("%s", valor);
+  if (valor[0] == 'N') b->idNascimento = -1;
+  else b->idNascimento = atoi(valor);
+
+  //idadeMae
+  scanf("%s", valor);
+  if (valor[0] == 'N') b->idadeMae = -1;
+  else b->idadeMae = atoi(valor);
+
+  getchar();
+
+  //dataNascimento
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->dataNascimento, valor, 10);
+  }
+
+  else{
+    strncpy(b->dataNascimento, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+  getchar();
+
+  //sexoBebe
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->sexoBebe, valor, 1);
+  }
+
+  else{
+    strncpy(b->sexoBebe, nulo, 1);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+  getchar();
+  
+  //estadoMae
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->estadoMae, valor, 2);
+  }
+
+  else{
+    strncpy(b->estadoMae, nulo, 2);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+  getchar();
+  
+  //estadoBebe
+  scanf("%c", &c);
+  if (c == '"'){
+    scanf("%[^\"]", valor);
+    strncpy(b->estadoBebe, valor, 2);
+  }
+
+  else{
+    strncpy(b->estadoBebe, nulo, 2);
+    getchar();
+    getchar();
+  }
+
+  getchar();
+    
+  return b;
+}
+
 // lê um registro do arquivo binário e coloca as informações em uma struct baby
 Baby * readRegistros(FILE *fp, int RRN){
 	Baby * baby = newBaby();
@@ -187,7 +408,6 @@ Baby * readRegistros(FILE *fp, int RRN){
 
 	// verifica se o registro foi removido
 	if (a == -1) {
-		printf("Registro Removido");
 		return baby; 
 	}
 	

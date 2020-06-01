@@ -24,3 +24,4 @@ clean:
 
 zip:
 	zip trab.zip *.c *.h Makefile
+

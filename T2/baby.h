@@ -28,6 +28,8 @@ void destroyBaby(Baby ** Baby);
 
 void printBaby(Baby * Baby);
 
+void printBabyFull(Baby * b);
+
 Baby * readCsvRow(FILE * fp);
 
 void readCsvHeader(FILE * fp);
