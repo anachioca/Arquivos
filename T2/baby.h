@@ -1,5 +1,6 @@
 // Trabalho 1 || SCC0215 - Organização de Arquivos
 // Ana Laura Chioca Vieira || NUSP: 9866531
+// Otto Cruz Fernandes || NUSP: 11275130
 
 #ifndef baby_H
 #define baby_H

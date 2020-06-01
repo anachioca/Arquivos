@@ -11,6 +11,7 @@
 
 #define reg_size 128
 
+
 // inicializa uma struct Header
 Header * initHeader(){
 	Header * header = malloc(1*sizeof(Header));
