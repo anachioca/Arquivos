@@ -11,6 +11,7 @@
 
 #define reg_size 128
 
+
 // inicializa uma struct Header
 Header * initHeader(){
 	Header * header = malloc(1*sizeof(Header));
@@ -206,9 +207,13 @@ Baby * readRegistros(FILE *fp, int RRN){
 	fread(&(baby -> idNascimento), sizeof(int), 1, fp);
 	fread(&(baby -> idadeMae), sizeof(int), 1, fp);
 	fread(baby -> dataNascimento, sizeof(char), 10, fp);
+	baby -> dataNascimento[10] = '\0';
 	fread(baby -> sexoBebe, sizeof(char), 1, fp);
+	baby -> sexoBebe[1] = '\0';
 	fread(baby -> estadoMae, sizeof(char), 2, fp);
+	baby -> estadoMae[2] = '\0';
 	fread(baby -> estadoBebe, sizeof(char), 2, fp);
+	baby -> estadoBebe[2] = '\0';
 	return baby;
 }
 

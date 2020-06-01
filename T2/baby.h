@@ -1,5 +1,6 @@
 // Trabalho 1 || SCC0215 - Organização de Arquivos
 // Ana Laura Chioca Vieira || NUSP: 9866531
+// Otto Cruz Fernandes || NUSP: 11275130
 
 #ifndef baby_H
 #define baby_H
@@ -15,10 +16,10 @@ struct info{
     char * cidadeBebe;  //campo de tamanho variável
     int idNascimento;
     int idadeMae;
-    char dataNascimento[10];
-    char sexoBebe[1];
-    char estadoMae[2];
-    char estadoBebe[2];
+    char dataNascimento[11];
+    char sexoBebe[2];
+    char estadoMae[3];
+    char estadoBebe[3];
 };
 
 Baby * newBaby();
