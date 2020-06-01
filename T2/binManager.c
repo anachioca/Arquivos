@@ -178,7 +178,6 @@ int atualizaRegistros(FILE * fp, int RRN, Header * h){
 	}
 
 	writeRegistros(h, fp, b, RRN);
-	printBaby(b);
 	destroyBaby(&b);
 	return 0;
 }
@@ -310,7 +309,7 @@ Baby * readInputBaby(){
 
   else{
     b->cidadeBebe = malloc(1 * sizeof(char));
-    strncpy(b->cidadeMae, nulo, 1);
+    strncpy(b->cidadeBebe, nulo, 1);
     getchar();
     getchar();
     getchar();
@@ -390,7 +389,6 @@ Baby * readInputBaby(){
   }
 
   getchar();
-  printBabyFull(b);
     
   return b;
 }
