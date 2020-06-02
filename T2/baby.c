@@ -1,6 +1,6 @@
-// Trabalho 2 || SCC0215 - Organização de Arquivos
+// Trabalho 1 || SCC0215 - Organização de Arquivos
 // Ana Laura Chioca Vieira || NUSP: 9866531
-// Otto Cruz Fernades
+// Otto Cruz Fernandes || NUSP: 11275130
 
 #include <stdlib.h>
 #include <string.h>

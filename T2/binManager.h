@@ -1,5 +1,6 @@
 // Trabalho 1 || SCC0215 - Organização de Arquivos
 // Ana Laura Chioca Vieira || NUSP: 9866531
+// Otto Cruz Fernandes || NUSP: 11275130
 
 #ifndef binManager_H
 #define binManager_H
@@ -8,6 +9,12 @@
 #include <string.h>
 #include <stdio.h>
 #include "baby.h"
+
+#define bool int
+#define TRUE 1
+#define FALSE 0
+#define FAIL -1
+#define SUCCESS 2
 
 typedef struct head{
     char status[1];
@@ -39,7 +46,7 @@ void readHeader(FILE *fp, Header * header);
 
 Baby * readRegistros(FILE *fp, int RRN);
 
-void removeRegistro(FILE * binario, int rrn);
+bool removeRegistro(Header * header, FILE * binario, int rrn, char filtros[8][128]);
 
 void binarioNaTela(char *nomeArquivoBinario);
 

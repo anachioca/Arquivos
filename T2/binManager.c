@@ -216,14 +216,22 @@ Baby * readRegistros(FILE *fp, int RRN){
 	return baby;
 }
 
-void removeRegistro(FILE * binario, int rrn){
-	int byteoffset = (RRN+1)*reg_size;
-	fseek(fp, byteoffset, SEEK_SET);
+bool removeRegistro(Header * header, FILE * binario, int rrn, char filtros[8][128]){
+	int byteoffset = (rrn+1)*reg_size;
+	fseek(binario, byteoffset, SEEK_SET);
 
-	//size of cidadeMae and cidadeBebe
-	int a = -1;
+	int jaFoiRemovido;
+	fread(&jaFoiRemovido, sizeof(int), 1, binario);
+	if(jaFoiRemovido == -1 || rrn > header -> RRNproxRegistro)
+		return FALSE;
 
-	fwrite(&(a), sizeof(int), 1, fp);
+	fseek(binario, byteoffset, SEEK_SET);
+
+	int remocao = -1;
+	fwrite(&remocao, sizeof(int), 1, binario);
+	header -> numeroRegistrosInseridos--;
+	header -> numeroRegistrosRemovidos++;
+	return TRUE;
 }
 
 /*
