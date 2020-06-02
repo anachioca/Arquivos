@@ -187,8 +187,7 @@ Baby * readRegistros(FILE *fp, int RRN){
 
 	// verifica se o registro foi removido
 	if (a == -1) {
-		printf("Registro Removido");
-		return baby; 
+		return NULL; 
 	}
 	
 	fread(&(c), sizeof(int), 1, fp);
@@ -215,6 +214,16 @@ Baby * readRegistros(FILE *fp, int RRN){
 	fread(baby -> estadoBebe, sizeof(char), 2, fp);
 	baby -> estadoBebe[2] = '\0';
 	return baby;
+}
+
+void removeRegistro(FILE * binario, int rrn){
+	int byteoffset = (RRN+1)*reg_size;
+	fseek(fp, byteoffset, SEEK_SET);
+
+	//size of cidadeMae and cidadeBebe
+	int a = -1;
+
+	fwrite(&(a), sizeof(int), 1, fp);
 }
 
 /*

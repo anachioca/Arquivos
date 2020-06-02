@@ -39,6 +39,8 @@ void readHeader(FILE *fp, Header * header);
 
 Baby * readRegistros(FILE *fp, int RRN);
 
+void removeRegistro(FILE * binario, int rrn);
+
 void binarioNaTela(char *nomeArquivoBinario);
 
 void trim(char * string);
