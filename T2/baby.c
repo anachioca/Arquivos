@@ -38,7 +38,7 @@ void printBaby(Baby * baby){
   char nascimento[10];
 
   // verifica se o estadoBebe está preenchido, caso contrário imprimirá um '-'
-  if (strlen(baby->estadoBebe) == 0) {
+  if (strlen(baby->estadoBebe) == 0 || baby->estadoBebe[0] == '$') {
     estado[0] = '-';
     estado[1] = '\0';
   }
@@ -47,7 +47,7 @@ void printBaby(Baby * baby){
   }
 
   // verifica se o dataNascimento está preenchido, caso contrário imprimirá um '-'
-  if (strlen(baby->dataNascimento) == 0) {
+  if (strlen(baby->dataNascimento) == 0 || baby->dataNascimento[0] == '$') {
     nascimento[0] = '-';
     nascimento[1] = '\0';
   }
@@ -56,7 +56,7 @@ void printBaby(Baby * baby){
   }
 
   // verifica se o cidadeBebe está preenchido, caso contrário imprimirá um '-'
-  if (strlen(baby->cidadeBebe) == 0) {
+  if (strlen(baby->cidadeBebe) == 0 || baby->cidadeBebe[0] == '$') {
     if (baby->sexoBebe[0] == '0')
       printf("Nasceu em -/%.2s, em %s, um bebê de sexo IGNORADO.\n",
         estado, nascimento);
@@ -81,6 +81,17 @@ void printBaby(Baby * baby){
   }
 }
 
+void printBabyFull(Baby * b){
+  printf("\ncidadeMae: %s\n", b->cidadeMae);
+  printf("cidadeBebe: %s\n", b->cidadeBebe);
+  printf("idNascimento: %d\n", b->idNascimento);
+  printf("idadeMae: %d\n", b->idadeMae);
+  printf("dataNascimento: %s\n", b->dataNascimento);
+  printf("sexoBebe: %s\n", b->sexoBebe);
+  printf("estadoMae: %s\n", b->estadoMae);
+  printf("estadoBebe: %s\n", b->estadoBebe);
+}
+
 // Le uma linha inteira do .csv e coloca cada informação em um lugar da struct Baby criada
 Baby * readCsvRow(FILE * fp){
   Baby * baby = newBaby();
@@ -93,19 +104,23 @@ Baby * readCsvRow(FILE * fp){
 
   char * line = csvNextLine(fp);
   strncpy(baby -> dataNascimento, line, 10);
+  baby -> dataNascimento[10] = '\0';
   free(line);
 
   line = csvNextLine(fp);
   strncpy(baby -> sexoBebe, line, 1);
+  baby -> sexoBebe[1] = '\0';
   free(line);
 
   line = csvNextLine(fp);
   strncpy(baby -> estadoMae, line, 2);
+  baby -> estadoMae[2] = '\0';
   free(line);
 
   // usa a função csvUntilNextLine pois o final do estadoBebe é marcado por um \n, e não por uma vírgula
   line = csvUntilNextLine(fp);
   strncpy(baby -> estadoBebe, line, 2);
+  baby -> estadoBebe[2] = '\0';
   free(line);
 
   return baby;
