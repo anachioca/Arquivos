@@ -29,6 +29,14 @@ Header * initHeader(){
 	return header;
 }
 
+void printHeader(Header * header){
+	printf("Status -> %s\n", header -> status);
+	printf("RRNproxRegistro -> %d\n", header -> RRNproxRegistro);
+	printf("numeroRegistrosInseridos -> %d\n", header -> numeroRegistrosInseridos);
+	printf("numeroRegistrosRemovidos -> %d\n", header -> numeroRegistrosRemovidos);
+	printf("numeroRegistrosAtualizados -> %d\n", header -> numeroRegistrosAtualizados);
+}
+
 void writeHeader(Header * header, FILE * fp){
 	fseek(fp, 0, SEEK_SET);
 
@@ -42,10 +50,13 @@ void writeHeader(Header * header, FILE * fp){
 }
 
 // apaga uma struct Header
-void destroyHeader(Header ** head){
-  Header * h = *head;
-  free(*head);
-  *head = NULL;
+void closeHeaderEBinario(Header ** header, FILE ** binario){
+  setStatusConsistente(*header);
+  writeHeader(*header, *binario);
+  free(*header);
+  fclose(*binario);
+  *binario = NULL;
+  *header = NULL;
 }
 
 // escreve o caracter '$' em 'quantidade' bytes do aqruivo binário
@@ -186,9 +197,8 @@ Baby * readRegistros(FILE *fp, int RRN){
 	fread(&(a), sizeof(int), 1, fp);
 
 	// verifica se o registro foi removido
-	if (a == -1) {
+	if (a == -1) 
 		return NULL; 
-	}
 	
 	fread(&(c), sizeof(int), 1, fp);
 	baby -> cidadeMae = malloc((a+1)*sizeof(char));
@@ -216,22 +226,14 @@ Baby * readRegistros(FILE *fp, int RRN){
 	return baby;
 }
 
-bool removeRegistro(Header * header, FILE * binario, int rrn, char filtros[8][128]){
+void removeRegistro(Header * header, FILE * binario, int rrn){
 	int byteoffset = (rrn+1)*reg_size;
-	fseek(binario, byteoffset, SEEK_SET);
-
-	int jaFoiRemovido;
-	fread(&jaFoiRemovido, sizeof(int), 1, binario);
-	if(jaFoiRemovido == -1 || rrn > header -> RRNproxRegistro)
-		return FALSE;
-
 	fseek(binario, byteoffset, SEEK_SET);
 
 	int remocao = -1;
 	fwrite(&remocao, sizeof(int), 1, binario);
 	header -> numeroRegistrosInseridos--;
 	header -> numeroRegistrosRemovidos++;
-	return TRUE;
 }
 
 /*

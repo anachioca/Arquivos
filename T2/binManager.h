@@ -28,7 +28,9 @@ Header * initHeader();
 
 void writeHeader(Header * header, FILE *fp);
 
-void destroyHeader(Header ** header);
+void printHeader(Header * header);
+
+void closeHeaderEBinario(Header ** header, FILE ** binario);
 
 void writeTrash(FILE *fp, int qt);
 
@@ -46,7 +48,7 @@ void readHeader(FILE *fp, Header * header);
 
 Baby * readRegistros(FILE *fp, int RRN);
 
-bool removeRegistro(Header * header, FILE * binario, int rrn, char filtros[8][128]);
+void removeRegistro(Header * header, FILE * binario, int rrn);
 
 void binarioNaTela(char *nomeArquivoBinario);
 

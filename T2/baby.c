@@ -22,6 +22,8 @@ Baby * newBaby(){
 
 // apaga uma struct baby
 void destroyBaby(Baby ** baby){
+  if(*baby == NULL) return;
+  
   Baby * b = *baby;
   if(b -> cidadeMae) free(b -> cidadeMae);
   if(b -> cidadeBebe) free(b -> cidadeBebe);
