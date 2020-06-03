@@ -40,7 +40,7 @@ void updateHeader(Header * header, int opt);
 
 void setStatusConsistente(Header * header);
 
-void setStatusInconsistente(Header * header);
+void setStatusInconsistente(Header * header, FILE * binario);
 
 int getRRN(Header * header);
 

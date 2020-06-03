@@ -94,29 +94,31 @@ void setStatusConsistente(Header * header){
 }
 
 // status = 0
-void setStatusInconsistente(Header * header){
+void setStatusInconsistente(Header * header, FILE * binario){
 	char stat = '0';
 	strncpy(header -> status, &stat, 1);
+	fseek(binario, 0, SEEK_SET);
+	fwrite(&stat, 1, 1, binario);
 }
 
 // retorna o RRNproxRegistro
 int getRRN(Header * header){
-	int RRN;
-	RRN = header -> numeroRegistrosInseridos;
-	return RRN+1;
+	int rrn;
+	rrn = header -> numeroRegistrosInseridos;
+	return rrn+1;
 }
 
-int atualizaRegistros(FILE * fp, int RRN, Header * h){
-	fseek(fp, RRN*reg_size, SEEK_SET);
+int atualizaRegistros(FILE * binario, int rrn, Header * header){
+	fseek(binario, rrn*reg_size, SEEK_SET);
 	int a = 0, m;
-	fread(&(a), sizeof(int), 1, fp);
+	fread(&(a), sizeof(int), 1, binario);
 
 	// verifica se o registro foi removido
 	if (a == -1) {
 		return -1; 
 	}
 
-	Baby *b = readRegistros(fp, RRN);
+	Baby * baby = readRegistros(binario, rrn);
 	scanf("%d", &m);
 
 	for (int i = 0; i < m; i++){
@@ -138,60 +140,60 @@ int atualizaRegistros(FILE * fp, int RRN, Header * h){
 			}
 
 		if (strcmp(campo, "cidadeMae") == 0){
-			b->cidadeMae = malloc(strlen(valor) * sizeof(char));
-			strncpy(b->cidadeMae, valor, strlen(valor));
+			baby -> cidadeMae = malloc(strlen(valor) * sizeof(char));
+			strncpy(baby -> cidadeMae, valor, strlen(valor));
 		}	
 		else if (strcmp(campo, "cidadeBebe") == 0){
-			b->cidadeBebe = malloc(strlen(valor) * sizeof(char));
-			strncpy(b->cidadeBebe, valor, strlen(valor));
+			baby -> cidadeBebe = malloc(strlen(valor) * sizeof(char));
+			strncpy(baby -> cidadeBebe, valor, strlen(valor));
 		}
 		else if (strcmp(campo, "idNascimento") == 0){
-			if (valor[0] == '$') b->idNascimento = -1;
-			else b->idNascimento = atoi(valor);
+			if (valor[0] == '$') baby -> idNascimento = -1;
+			else baby -> idNascimento = atoi(valor);
 		}
 		else if (strcmp(campo, "idadeMae") == 0){
-			if (valor[0] == '$') b->idadeMae = -1;
-			else b->idadeMae = atoi(valor);
+			if (valor[0] == '$') baby -> idadeMae = -1;
+			else baby -> idadeMae = atoi(valor);
 		}
 		else if (strcmp(campo, "dataNascimento") == 0){
-			if (c == '"') strncpy(b->dataNascimento, valor, 10);
+			if (c == '"') strncpy(baby -> dataNascimento, valor, 10);
 			else {
 				valor[0] = '\0';
-				strncpy(b->dataNascimento, valor, 1);
+				strncpy(baby -> dataNascimento, valor, 1);
 			}
 		}
 		else if (strcmp(campo, "sexoBebe") == 0){
-			strncpy(b->sexoBebe, valor, 1);
+			strncpy(baby -> sexoBebe, valor, 1);
 		}
 		else if (strcmp(campo, "estadoBebe") == 0){
-			if (c == '"') strncpy(b->estadoBebe, valor, 2);
+			if (c == '"') strncpy(baby -> estadoBebe, valor, 2);
 			else {
 				valor[0] = '\0';
-				strncpy(b->estadoBebe, valor, 1);
+				strncpy(baby -> estadoBebe, valor, 1);
 			}	
 		}
 		else if (strcmp(campo, "estadoMae") == 0){
-			if (c == '"') strncpy(b->estadoMae, valor, 2);
+			if (c == '"') strncpy(baby -> estadoMae, valor, 2);
 			else {
 				valor[0] = '\0';
-				strncpy(b->estadoMae, valor, 1);
+				strncpy(baby -> estadoMae, valor, 1);
 			}
 		}
 
 		getchar();
 	}
 
-	writeRegistros(h, fp, b, RRN);
-	destroyBaby(&b);
+	writeRegistros(header, binario, baby, rrn);
+	destroyBaby(&baby);
 	return 0;
 }
 
 // escreve um registro no arquivo binário
 // recebe o registro que é uma struct baby
-// se RRN != -1, da fseek para aquele RRN (para a funcionalidade 7)
-void writeRegistros(Header * header, FILE * fp, Baby * baby, int RRN){
+// se rrn != -1, da fseek para aquele rrn (para a funcionalidade 7)
+void writeRegistros(Header * header, FILE * fp, Baby * baby, int rrn){
 
-	if (RRN != -1) fseek(fp, (RRN+1)*reg_size, SEEK_SET);
+	if (rrn != -1) fseek(fp, (rrn+1)*reg_size, SEEK_SET);
 
 	// comprimento das strings cidadeBebe e cidadeMae
 	int a = strlen(baby -> cidadeMae);
@@ -220,8 +222,8 @@ void writeRegistros(Header * header, FILE * fp, Baby * baby, int RRN){
 
 	// escreve '$', ou seja, lixo, nos bytes que restaram, até o 105 byte do registro (espaço reservado para os campos variáveis)
 	int lixo =  105 - a - c - 8;
-	if (RRN == -1) writeTrash(fp, lixo);
-	else fseek(fp, ((RRN+1)*reg_size) + 105, SEEK_SET);
+	if (rrn == -1) writeTrash(fp, lixo);
+	else fseek(fp, ((rrn+1)*reg_size) + 105, SEEK_SET);
 
 	//escreve no binário o idNascimento e a idadeMae
 	fwrite(&baby -> idNascimento, sizeof(int), 1, fp);
@@ -398,9 +400,9 @@ Baby * readInputBaby(){
 }
 
 // lê um registro do arquivo binário e coloca as informações em uma struct baby
-Baby * readRegistros(FILE *binario, int RRN){
+Baby * readRegistros(FILE *binario, int rrn){
 	Baby * baby = newBaby();
-	int byteoffset = (RRN+1)*reg_size;
+	int byteoffset = (rrn+1)*reg_size;
 	if(ftell(binario) != byteoffset)
 		fseek(binario, byteoffset, SEEK_SET);
 

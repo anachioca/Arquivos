@@ -1,7 +1,7 @@
 all: prog
 
 run: prog
-	./prog <19.in
+	./prog
 	
 valgrind: prog
 	gcc -o prog -g -Wall -ggdb3 baby.o binManager.o main.o -g

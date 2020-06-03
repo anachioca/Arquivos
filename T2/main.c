@@ -82,6 +82,8 @@ bool leBinarioEHeader(FILE ** binario, Header ** header, char ** nomeDoArquivo){
     return FAIL;
   }
 
+  setStatusInconsistente(*header, *binario);
+
   return SUCCESS;
 }
 
@@ -110,87 +112,6 @@ void imprimeBin(){
   closeHeaderEBinario(&header, &binario);
 }
 
-void insereReg(){
-    char arquivoGerado[100];
-    scanf("%s", arquivoGerado);
-    int n; // número de registros a serem inseridos
-    scanf("%d", &n);
-    FILE *fpb;
-    
-    // checa se o arquivo a ser aberto existe
-    // caso não seja possível abri-lo, imprime mensagem de erro
-    fpb = fopen(arquivoGerado, "r+b");
-    if (fpb == NULL){
-      printf("Falha no processamento do arquivo.");
-      return;
-    }
-
-    //lê as informações do cabeçalho
-    Header *h = malloc(1*sizeof(Header));
-    readHeader(fpb, h);
-
-    //caso o status seja 0, imprime mensagem de erro
-    if(h->status[0] == '0'){
-      printf("Falha no processamento do arquivo.");
-      return;
-    }
-
-    setStatusInconsistente(h);
-
-    for (int i = 0; i < n; i++){
-      Baby *b;
-      b = readInputBaby(); // lê o input do teclado e coloca em uma struct Baby
-      fseek(fpb, 0, SEEK_END); // vai até o fim do arquivo
-      
-      writeRegistros(h, fpb, b, -1); // escreve a struct baby no arquivo binário
-      updateHeader(h, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
-      //printBaby(b);
-      destroyBaby(&b);
-    }
-
-    closeHeaderEBinario(&h, &fpb);
-    binarioNaTela(arquivoGerado);
-}
-
-void atualizaReg(){
-    char arquivoGerado[100];
-    scanf("%s", arquivoGerado);
-    int n; // número de registros a serem inseridos
-    int RRN; // RRN a ser digitado pelo usuário
-    scanf("%d", &n);
-    FILE *fpb;
-    
-    // checa se o arquivo a ser aberto existe
-    // caso não seja possível abri-lo, imprime mensagem de erro
-    fpb = fopen(arquivoGerado, "r+b");
-    if (fpb == NULL){
-      printf("Falha no processamento do arquivo.");
-      return;
-    }
-
-    //lê as informações do cabeçalho
-    Header *h = malloc(1*sizeof(Header));
-    readHeader(fpb, h);
-
-    //caso o status seja 0, imprime mensagem de erro
-    if(h->status[0] == '0'){
-      printf("Falha no processamento do arquivo.");
-      return;
-    }
-
-    setStatusInconsistente(h);
-
-    for (int i = 0; i < n; i++){
-      scanf("%d", &RRN);
-      if (RRN > h->RRNproxRegistro) break;
-      if (atualizaRegistros(fpb, RRN, h) == 0) {
-        updateHeader(h, 2); // incrementa no header a quantidade de arquivos atualizados
-      }
-    }
-
-    closeHeaderEBinario(&h, &fpb);
-    binarioNaTela(arquivoGerado);
-}
 
 int getIndiceDoCampo(char * nomeDoCampo){
   char * campos[] = {"cidadeMae", "cidadeBebe", "idNascimento", "idadeMae",
@@ -342,10 +263,58 @@ void remocaoLogica(){
   for(int i = 0; i < numeroDeRemocoes; i++)
     pesquisaBin(header, binario, removeRegistro);
 
-  // printHeader(header);
-
   closeHeaderEBinario(&header, &binario);
 
+  binarioNaTela(nomeDoArquivo);
+  free(nomeDoArquivo);
+}
+
+void insereRegistro(){
+  FILE * binario;
+  Header * header;
+  char * nomeDoArquivo;
+  if(leBinarioEHeader(&binario, &header, &nomeDoArquivo) == FAIL)
+    return;
+
+  Baby * baby;
+  int numeroDeInsercoes;
+  scanf("%d", &numeroDeInsercoes);
+
+  for (int i = 0; i < numeroDeInsercoes; i++){
+    baby = readInputBaby(); // lê o input do teclado e coloca em uma struct Baby
+    fseek(binario, 0, SEEK_END); // vai até o fim do arquivo
+    
+    writeRegistros(header, binario, baby, -1); 
+    updateHeader(header, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
+    destroyBaby(&baby);
+  }
+
+  closeHeaderEBinario(&header, &binario);
+  binarioNaTela(nomeDoArquivo);
+  free(nomeDoArquivo);
+}
+
+void atualizaReg(){
+  FILE * binario;
+  Header * header;
+  char * nomeDoArquivo;
+  if(leBinarioEHeader(&binario, &header, &nomeDoArquivo) == FAIL)
+    return;
+
+  Baby * baby;
+  int numeroDeAtualizacoes;
+  int rrn;
+  scanf("%d", &numeroDeAtualizacoes);
+
+  for (int i = 0; i < numeroDeAtualizacoes; i++){
+    scanf("%d", &rrn);
+    if (rrn > header -> RRNproxRegistro) break;
+    if (atualizaRegistros(binario, rrn, header) == 0) {
+      updateHeader(header, 2); // incrementa no header a quantidade de arquivos atualizados
+    }
+  }
+
+  closeHeaderEBinario(&header, &binario);
   binarioNaTela(nomeDoArquivo);
   free(nomeDoArquivo);
 }
@@ -378,7 +347,7 @@ int main(){
       break;
       
     case 6:
-      insereReg();
+      insereRegistro();
       break;
     
     case 7:
