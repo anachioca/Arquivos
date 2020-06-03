@@ -185,50 +185,52 @@ void readHeader(FILE *fp, Header * header){
 }
 
 // lê um registro do arquivo binário e coloca as informações em uma struct baby
-Baby * readRegistros(FILE *fp, int RRN){
+Baby * readRegistros(FILE *binario, int RRN){
 	Baby * baby = newBaby();
 	int byteoffset = (RRN+1)*reg_size;
-	fseek(fp, byteoffset, SEEK_SET);
+	if(ftell(binario) != byteoffset)
+		fseek(binario, byteoffset, SEEK_SET);
 
 	//size of cidadeMae and cidadeBebe
 	int a = 0;
 	int c = 0;
 
-	fread(&(a), sizeof(int), 1, fp);
+	fread(&(a), sizeof(int), 1, binario);
 
 	// verifica se o registro foi removido
 	if (a == -1) 
 		return NULL; 
 	
-	fread(&(c), sizeof(int), 1, fp);
+	fread(&(c), sizeof(int), 1, binario);
 	baby -> cidadeMae = malloc((a+1)*sizeof(char));
 	baby -> cidadeBebe = malloc((c+1)*sizeof(char));
 
-	fread(baby -> cidadeMae, sizeof(char), a, fp);
-	fread(baby -> cidadeBebe, sizeof(char), c, fp);
+	fread(baby -> cidadeMae, sizeof(char), a, binario);
+	fread(baby -> cidadeBebe, sizeof(char), c, binario);
 
 	baby -> cidadeMae[a] = '\0';
 	baby -> cidadeBebe[c] = '\0';
 
 	// pula os bytes reservados para os campos variáveis
-	fseek(fp, byteoffset+105, SEEK_SET);
+	fseek(binario, byteoffset+105, SEEK_SET);
 
-	fread(&(baby -> idNascimento), sizeof(int), 1, fp);
-	fread(&(baby -> idadeMae), sizeof(int), 1, fp);
-	fread(baby -> dataNascimento, sizeof(char), 10, fp);
+	fread(&(baby -> idNascimento), sizeof(int), 1, binario);
+	fread(&(baby -> idadeMae), sizeof(int), 1, binario);
+	fread(baby -> dataNascimento, sizeof(char), 10, binario);
 	baby -> dataNascimento[10] = '\0';
-	fread(baby -> sexoBebe, sizeof(char), 1, fp);
+	fread(baby -> sexoBebe, sizeof(char), 1, binario);
 	baby -> sexoBebe[1] = '\0';
-	fread(baby -> estadoMae, sizeof(char), 2, fp);
+	fread(baby -> estadoMae, sizeof(char), 2, binario);
 	baby -> estadoMae[2] = '\0';
-	fread(baby -> estadoBebe, sizeof(char), 2, fp);
+	fread(baby -> estadoBebe, sizeof(char), 2, binario);
 	baby -> estadoBebe[2] = '\0';
 	return baby;
 }
 
 void removeRegistro(Header * header, FILE * binario, int rrn){
 	int byteoffset = (rrn+1)*reg_size;
-	fseek(binario, byteoffset, SEEK_SET);
+	if(ftell(binario) != byteoffset)
+		fseek(binario, byteoffset, SEEK_SET);
 
 	int remocao = -1;
 	fwrite(&remocao, sizeof(int), 1, binario);
