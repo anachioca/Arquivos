@@ -1,6 +1,6 @@
-// Trabalho 2 || SCC0215 - Organização de Arquivos
+// Trabalho 1 || SCC0215 - Organização de Arquivos
 // Ana Laura Chioca Vieira || NUSP: 9866531
-// Otto Cruz Fernades
+// Otto Cruz Fernandes || NUSP: 11275130
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +22,8 @@ Baby * newBaby(){
 
 // apaga uma struct baby
 void destroyBaby(Baby ** baby){
+  if(*baby == NULL) return;
+  
   Baby * b = *baby;
   if(b -> cidadeMae) free(b -> cidadeMae);
   if(b -> cidadeBebe) free(b -> cidadeBebe);

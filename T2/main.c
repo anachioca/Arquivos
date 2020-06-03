@@ -1,5 +1,6 @@
 // Trabalho 1 || SCC0215 - Organização de Arquivos
 // Ana Laura Chioca Vieira || NUSP: 9866531
+// Otto Cruz Fernandes || NUSP: 11275130
 
 #include "baby.h"
 #include "binManager.h"
@@ -51,56 +52,62 @@ void leCsv(){
       updateHeader(header, 1);
   }
 
-  setStatusConsistente(header); // seta o status do arquivo binário
-  writeHeader(header, binario); // Escreve o cabeçalho no arquivo binário
-  destroyHeader(&header);
-  fclose(binario);
+  closeHeaderEBinario(&header, &binario);
   fclose(csv);
 
   binarioNaTela(arquivoGerado);
 }
 
-void imprimeBin(){
+bool leBinarioEHeader(FILE ** binario, Header ** header, char ** nomeDoArquivo){
   char arquivoGerado[128];
-
   scanf("%s", arquivoGerado);
-  Baby * baby;
-  FILE * binario;
-  
-  // checa se o arquivo a ser aberto existe
-  // caso não seja possível abri-lo, imprime mensagem de erro
-  binario = fopen(arquivoGerado, "rb");
-  if (binario == NULL){
+
+  if(nomeDoArquivo != NULL){
+    *nomeDoArquivo = malloc(128);
+    strncpy(*nomeDoArquivo, arquivoGerado, 128);
+  }
+
+  *binario = fopen(arquivoGerado, "rb+");
+  if (*binario == NULL){
     printf("Falha no processamento do arquivo.");
-    return;
+    return FAIL;
   }
 
   //lê as informações do cabeçalho
-  Header * header = malloc(1*sizeof(Header));
-  readHeader(binario, header);
-  int RRN = header->RRNproxRegistro;
+  *header = malloc(1*sizeof(Header));
+  readHeader(*binario, *header);
 
-  //caso o status seja 0, imprime mensagem de erro
-  if(header->status[0] == '0'){
+  if((*header) -> status[0] == '0'){
     printf("Falha no processamento do arquivo.");
-    return;
+    return FAIL;
   }
 
+  return SUCCESS;
+}
+
+void imprimeBin(){
+  FILE * binario;
+  Header * header;
+  if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
+    return;
+
+  Baby * baby;
+  int rrnMaximo = header->RRNproxRegistro;
+
   // caso não existam registros no arquivo
-  if (RRN == 0){
-    printf("Registro inexistente.");
+  if (rrnMaximo == 0){
+    printf("Registro Inexistente.");
     return;
   }
 
   //lê os registros e guarda em uma struct baby, imprimindo-a
-  for (int i = 0; i < RRN; i++){
+  for (int i = 0; i < rrnMaximo; i++){
     baby = readRegistros(binario, i);
     printBaby(baby);
     destroyBaby(&baby);
   }
 
-  destroyHeader(&header);
-  fclose(binario);
+  closeHeaderEBinario(&header, &binario);
 }
 
 void insereReg(){
@@ -141,10 +148,7 @@ void insereReg(){
       destroyBaby(&b);
     }
 
-    setStatusConsistente(h); // seta o status do arquivo binário
-    writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
-    destroyHeader(&h);
-    fclose(fpb);
+    closeHeaderEBinario(&h, &fpb);
     binarioNaTela(arquivoGerado);
 }
 
@@ -184,11 +188,7 @@ void atualizaReg(){
       }
     }
 
-    setStatusConsistente(h); // seta o status do arquivo binário
-    writeHeader(h, fpb); // Escreve o cabeçalho no arquivo binário
-  
-    destroyHeader(&h);
-    fclose(fpb);
+    closeHeaderEBinario(&h, &fpb);
     binarioNaTela(arquivoGerado);
 }
 
@@ -232,7 +232,9 @@ int getCampoIntDoBaby(Baby * baby, int i){
   }
 }
 
-bool babyEstaNoFiltro(Baby * baby, char filtros[8][20]){
+bool babyEstaNoFiltro(Baby * baby, char filtros[8][128]){
+  if(!baby) return FALSE;
+
   for(int i = 0; i < 8; i++){
     if(filtros[i][0] != '\0'){
       if(i == 2 || i == 3){
@@ -247,63 +249,105 @@ bool babyEstaNoFiltro(Baby * baby, char filtros[8][20]){
   return TRUE;
 }
 
-void pesquisaBin(){
-  char arquivoGerado[128];
-  scanf("%s", arquivoGerado);
+void leRegistroEImprimeBebe(Header * header, FILE * binario, int rrn){
+  Baby * baby = readRegistros(binario, rrn);
+  printBaby(baby);
+  destroyBaby(&baby);
+}
 
-  int m;
-  scanf("%d", &m);
+bool pesquisaBin(Header * header, FILE * binario, 
+    void (*executaNoBinario) (Header *,FILE *, int)){
 
-  char filtros[8][20]; // cada linha dessa matriz representa o filtro para um campo
+  int numeroDeFiltros;
+  scanf("%d", &numeroDeFiltros);
+
+  char filtros[8][128]; // cada linha dessa matriz representa o filtro para um campo
   char nomeDoCampo[128];
 
-  for(int i = 0; i < 8; i++){
+  for(int i = 0; i < 8; i++)
     filtros[i][0] = '\0'; // para campos não selecionados, o vetor terá '\0'
-  }
 
-  for(int i = 0; i < m; i++){
+  for(int i = 0; i < numeroDeFiltros; i++){
     scanf("%s", nomeDoCampo);
     scan_quote_string(filtros[getIndiceDoCampo(nomeDoCampo)]);
   }
 
   Baby * baby;
-  FILE * binario;
-
-  binario = fopen(arquivoGerado, "rb");
-  if (binario == NULL){
-    printf("Falha no processamento do arquivo.");
-    return;
-  }
-
-  //lê as informações do cabeçalho
-  Header * header = malloc(1*sizeof(Header));
-  readHeader(binario, header);
-  int RRN = header->RRNproxRegistro;
-
-  //caso o status seja 0, imprime mensagem de erro
-  if(header->status[0] == '0'){
-    printf("Falha no processamento do arquivo.");
-    return;
-  }
-
-  bool encontrouResultado = FALSE;
-
-  //lê os registros e guarda em uma struct baby, imprimindo-a
-  for (int i = 0; i < RRN; i++){
+  bool babyDeuMatch = FALSE;
+  bool algumBabyDeuMatch = FALSE;
+  int rrnMaximo = header->RRNproxRegistro;
+  
+  for (int i = 0; i < rrnMaximo; i++){
     baby = readRegistros(binario, i);
-    if(babyEstaNoFiltro(baby, filtros)){
-      printBaby(baby);
-      encontrouResultado = TRUE;
-    }
+    babyDeuMatch = babyEstaNoFiltro(baby, filtros);
+    if(babyDeuMatch)
+      executaNoBinario(header, binario, i);
+    
+    algumBabyDeuMatch = algumBabyDeuMatch || babyDeuMatch;
     destroyBaby(&baby);
   }
 
-  // caso nenhum registro tenha sido encontrado
-  if(!encontrouResultado)
+  return algumBabyDeuMatch;
+}
+
+void imprimeComFiltro(){
+  FILE * binario;
+  Header * header;
+  if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
+    return;
+
+  bool algumBabyFoiImpresso = pesquisaBin(header, binario, leRegistroEImprimeBebe);
+  if(!algumBabyFoiImpresso)
+    printf("Registro Inexistente.");
+    
+  closeHeaderEBinario(&header, &binario);
+}
+
+
+void pesquisaPorRRN(){
+  FILE * binario;
+  Header * header;
+  Baby * baby;
+  if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
+    return;
+
+  int rrn;
+  int rrnMaximo = header->RRNproxRegistro;
+  scanf("%d", &rrn);
+
+  baby = readRegistros(binario, rrn);
+  // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
+  if(rrn <= rrnMaximo && baby != NULL){
+    printBaby(baby);
+    destroyBaby(&baby);
+  }
+  else 
     printf("Registro Inexistente.");
 
-  destroyHeader(&header);
-  fclose(binario);
+  closeHeaderEBinario(&header, &binario);
+}
+
+void remocaoLogica(){
+  FILE * binario;
+  Header * header;
+  char * nomeDoArquivo;
+  if(leBinarioEHeader(&binario, &header, &nomeDoArquivo) == FAIL)
+    return;
+  
+  // printHeader(header);
+
+  int numeroDeRemocoes;
+  scanf("%d", &numeroDeRemocoes);
+
+  for(int i = 0; i < numeroDeRemocoes; i++)
+    pesquisaBin(header, binario, removeRegistro);
+
+  // printHeader(header);
+
+  closeHeaderEBinario(&header, &binario);
+
+  binarioNaTela(nomeDoArquivo);
+  free(nomeDoArquivo);
 }
 
 int main(){
@@ -322,7 +366,15 @@ int main(){
       break;
 
     case 3:
-      pesquisaBin();
+      imprimeComFiltro();
+      break;
+
+    case 4:
+      pesquisaPorRRN();
+      break;
+
+    case 5:
+      remocaoLogica();
       break;
       
     case 6:
