@@ -140,10 +140,12 @@ int atualizaRegistros(FILE * binario, int rrn, Header * header){
 			}
 
 		if (strcmp(campo, "cidadeMae") == 0){
+			free(baby -> cidadeMae);
 			baby -> cidadeMae = malloc(strlen(valor) * sizeof(char));
 			strncpy(baby -> cidadeMae, valor, strlen(valor));
 		}	
 		else if (strcmp(campo, "cidadeBebe") == 0){
+			free(baby -> cidadeBebe);
 			baby -> cidadeBebe = malloc(strlen(valor) * sizeof(char));
 			strncpy(baby -> cidadeBebe, valor, strlen(valor));
 		}
@@ -413,8 +415,10 @@ Baby * readRegistros(FILE *binario, int rrn){
 	fread(&(a), sizeof(int), 1, binario);
 
 	// verifica se o registro foi removido
-	if (a == -1) 
+	if (a == -1){
+		destroyBaby(&baby);
 		return NULL; 
+	}
 	
 	fread(&(c), sizeof(int), 1, binario);
 	baby -> cidadeMae = malloc((a+1)*sizeof(char));
