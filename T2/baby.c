@@ -43,7 +43,7 @@ void printBaby(Baby * baby){
     estado[1] = '\0';
   }
   else {
-    strncpy(estado, baby->estadoBebe, 2);
+    strcpy(estado, baby->estadoBebe);
   }
 
   // verifica se o dataNascimento está preenchido, caso contrário imprimirá um '-'
@@ -52,7 +52,7 @@ void printBaby(Baby * baby){
     nascimento[1] = '\0';
   }
   else {
-    strncpy(nascimento, baby->dataNascimento, 10);
+    strcpy(nascimento, baby->dataNascimento);
   }
 
   // verifica se o cidadeBebe está preenchido, caso contrário imprimirá um '-'

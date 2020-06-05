@@ -69,6 +69,7 @@ bool leBinarioEHeader(FILE ** binario, Header ** header, char ** nomeDoArquivo){
 
   *binario = fopen(arquivoGerado, "rb+");
   if (*binario == NULL){
+    free(*nomeDoArquivo);
     printf("Falha no processamento do arquivo.");
     return FAIL;
   }
@@ -78,6 +79,8 @@ bool leBinarioEHeader(FILE ** binario, Header ** header, char ** nomeDoArquivo){
   readHeader(*binario, *header);
 
   if((*header) -> status[0] == '0'){
+    free(*nomeDoArquivo);
+    closeHeaderEBinario(header, binario);
     printf("Falha no processamento do arquivo.");
     return FAIL;
   }
@@ -238,12 +241,12 @@ void pesquisaPorRRN(){
 
   baby = readRegistros(binario, rrn);
   // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
-  if(rrn <= rrnMaximo && baby != NULL){
+  if(rrn <= rrnMaximo && baby != NULL)
     printBaby(baby);
-    destroyBaby(&baby);
-  }
   else 
     printf("Registro Inexistente.");
+
+  destroyBaby(&baby);
 
   closeHeaderEBinario(&header, &binario);
 }
