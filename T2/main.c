@@ -156,6 +156,8 @@ int getCampoIntDoBaby(Baby * baby, int i){
   }
 }
 
+
+// verifica se o registro baby se encaixa nos filtros selecionados
 bool babyEstaNoFiltro(Baby * baby, char filtros[8][128]){
   if(!baby) return FALSE;
 
@@ -179,8 +181,9 @@ void leRegistroEImprimeBebe(Header * header, FILE * binario, int rrn){
   destroyBaby(&baby);
 }
 
-bool pesquisaBin(Header * header, FILE * binario, 
-    void (*executaNoBinario) (Header *,FILE *, int)){
+// procura pelo registro e executa a função passada (*executaNoBinario)
+// que pode ser, por exemplo, remover lógicamente o registro ou imprimir o registro
+bool pesquisaBin(Header * header, FILE * binario, void (*executaNoBinario) (Header *,FILE *, int)){
 
   int numeroDeFiltros;
   scanf("%d", &numeroDeFiltros);
@@ -257,8 +260,6 @@ void remocaoLogica(){
   char * nomeDoArquivo;
   if(leBinarioEHeader(&binario, &header, &nomeDoArquivo) == FAIL)
     return;
-  
-  // printHeader(header);
 
   int numeroDeRemocoes;
   scanf("%d", &numeroDeRemocoes);

@@ -29,6 +29,7 @@ Header * initHeader(){
 	return header;
 }
 
+// função para debug
 void printHeader(Header * header){
 	printf("Status -> %s\n", header -> status);
 	printf("RRNproxRegistro -> %d\n", header -> RRNproxRegistro);
@@ -37,6 +38,7 @@ void printHeader(Header * header){
 	printf("numeroRegistrosAtualizados -> %d\n", header -> numeroRegistrosAtualizados);
 }
 
+// escreve o header no começo do arquivo binário
 void writeHeader(Header * header, FILE * fp){
 	fseek(fp, 0, SEEK_SET);
 
@@ -108,9 +110,10 @@ int getRRN(Header * header){
 	return rrn+1;
 }
 
+// le o input do usuário e atualiza um registro 
 int atualizaRegistros(FILE * binario, int rrn, Header * header){
 	fseek(binario, rrn*reg_size, SEEK_SET);
-	int a = 0, m;
+	int a = 0, m; // m é o numero de campos que serão alterados
 	fread(&(a), sizeof(int), 1, binario);
 
 	// verifica se o registro foi removido
@@ -185,6 +188,7 @@ int atualizaRegistros(FILE * binario, int rrn, Header * header){
 		getchar();
 	}
 
+	//reescreve o registro no binário
 	writeRegistros(header, binario, baby, rrn);
 	destroyBaby(&baby);
 	return 0;
@@ -269,6 +273,7 @@ void readHeader(FILE *fp, Header * header){
 	fread(&(header -> numeroRegistrosAtualizados), sizeof(int), 1, fp);
 }
 
+// le a input do usuário para criar um novo registro
 Baby * readInputBaby(){
   Baby *b = newBaby();
   char strCidadeMae[105]; 
@@ -397,7 +402,6 @@ Baby * readInputBaby(){
   }
 
   getchar();
-    
   return b;
 }
 
@@ -446,6 +450,7 @@ Baby * readRegistros(FILE *binario, int rrn){
 	return baby;
 }
 
+// marca o registro como logicamente removido
 void removeRegistro(Header * header, FILE * binario, int rrn){
 	int byteoffset = (rrn+1)*reg_size;
 	if(ftell(binario) != byteoffset)
