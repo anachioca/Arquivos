@@ -68,8 +68,9 @@ bool leBinarioEHeader(FILE ** binario, Header ** header, char ** nomeDoArquivo){
   }
 
   *binario = fopen(arquivoGerado, "rb+");
+
   if (*binario == NULL){
-    free(*nomeDoArquivo);
+    if (nomeDoArquivo != NULL) free(*nomeDoArquivo);
     printf("Falha no processamento do arquivo.");
     return FAIL;
   }
@@ -79,7 +80,7 @@ bool leBinarioEHeader(FILE ** binario, Header ** header, char ** nomeDoArquivo){
   readHeader(*binario, *header);
 
   if((*header) -> status[0] == '0'){
-    free(*nomeDoArquivo);
+    if (nomeDoArquivo != NULL) free(*nomeDoArquivo);
     closeHeaderEBinario(header, binario);
     printf("Falha no processamento do arquivo.");
     return FAIL;
