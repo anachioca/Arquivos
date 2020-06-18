@@ -26,12 +26,17 @@ typedef struct ChaveRrn_{
     int rrn;
 } ChaveRrn;
 
-typedef struct RegistroDeDados_{
+typedef struct Pagina_{
     int nivel;
     int numeroDeChaves;
     ChaveRrn chaves[MAX_CHAVES];
     int rrnDescendentes[MAX_CHAVES + 1];
-} RegistroDeDados;
+} Pagina;
+
+typedef struct PosicaoDoRegistro_{
+    int rrnPagina;
+    int posicaoNaPagina;
+} PosicaoDoRegistro;
 
 void salvaIndice(Indice * indice);
 
@@ -79,33 +84,58 @@ void salvaIndice(Indice * indice){
     fwriteLixo(indice -> arquivoDeIndice, 55);
 }
 
-RegistroDeDados * initRegistroDeDados(){
-    RegistroDeDados * registroDeDados;
-    registroDeDados = malloc(sizeof(RegistroDeDados));
-    registroDeDados -> numeroDeChaves = 0;
+Pagina * initPagina(){
+    Pagina * Pagina;
+    Pagina = malloc(sizeof(Pagina));
+    Pagina -> numeroDeChaves = 0;
 
     for(int i = 0; i < MAX_CHAVES; i++){
-        registroDeDados -> chaves[i].chave = -1;
-        registroDeDados -> chaves[i].rrn = -1;
+        Pagina -> chaves[i].chave = -1;
+        Pagina -> chaves[i].rrn = -1;
     }
 
     for(int i = 0; i < MAX_CHAVES + 1; i++)
-        registroDeDados -> rrnDescendentes[i] = -1;
+        Pagina -> rrnDescendentes[i] = -1;
 }
 
-void destroyRegistroDeDados(RegistroDeDados ** registroDeDados){
-    if(*registroDeDados == NULL) return;
+void destroyPagina(Pagina ** Pagina){
+    if(*Pagina == NULL) return;
 
-    free(*registroDeDados);
-    *registroDeDados = NULL;
+    free(*Pagina);
+    *Pagina = NULL;
 }
 
-void carregaChave(Indice * indice, RegistroDeDados * pagina, int i){
+void carregaChave(Indice * indice, Pagina * pagina, int i){
     fread(&(pagina -> chaves[i].chave), sizeof(int), 1, indice -> arquivoDeIndice);
     fread(&(pagina -> chaves[i].rrn), sizeof(int), 1, indice -> arquivoDeIndice);
 }
 
-RegistroDeDados * carregaPagina(Indice * indice, int rrn){
+void escreveChaveNaPagina(Pagina * pagina, int i, ChaveRrn * chaveRrn){
+    pagina -> chaves[i].chave = chaveRrn -> chave;
+    pagina -> chaves[i].rrn = chaveRrn -> rrn;
+}
+
+void salvaChave(Indice * indice, ChaveRrn chaveRrn){
+    fwrite(chaveRrn.chave, sizeof(int), 1, indice -> arquivoDeIndice);
+    fwrite(chaveRrn.rrn, sizeof(int), 1, indice -> arquivoDeIndice);
+}
+
+void closePagina(Indice * indice, Pagina ** pagina, int rrnPagina){
+    long posicaoInicial = ftell(indice -> arquivoDeIndice);
+    long posicaoFinal = rrnPagina * TAM_PAGINA + TAM_CABECALHO;
+    if(posicaoInicial != posicaoFinal);
+        fseek(indice -> arquivoDeIndice, posicaoFinal, SEEK_SET);
+
+    fwrite(&((*pagina) -> nivel), sizeof(int), 1, indice -> arquivoDeIndice);
+    fwrite(&((*pagina) -> numeroDeChaves), sizeof(int), 1, indice -> arquivoDeIndice);
+    for(int i = 0; i < (*pagina) -> numeroDeChaves; i++)
+        salvaChave(indice, (*pagina) -> chaves[i]);
+
+    fwrite((*pagina) -> rrnDescendentes, sizeof(int)
+        , (*pagina) -> numeroDeChaves + 1, indice -> arquivoDeIndice);
+}
+
+Pagina * carregaPagina(Indice * indice, int rrn){
 
     if(rrn == RRN_PAGINA_VAZIA)
         return NULL;
@@ -113,7 +143,7 @@ RegistroDeDados * carregaPagina(Indice * indice, int rrn){
     long posicao = ftell(indice -> arquivoDeIndice);
     fseek(indice -> arquivoDeIndice, rrn * TAM_PAGINA + TAM_CABECALHO, SEEK_SET);
 
-    RegistroDeDados * pagina = initRegistroDeDados();
+    Pagina * pagina = initPagina();
 
     fread(&(pagina -> nivel), sizeof(int), 1, indice -> arquivoDeIndice);
     fread(&(pagina -> numeroDeChaves), sizeof(int), 1, indice -> arquivoDeIndice);
@@ -127,7 +157,7 @@ RegistroDeDados * carregaPagina(Indice * indice, int rrn){
     return pagina;
 }
 
-int buscaPelaPagina(RegistroDeDados * paginaDaChave, int chave){
+int buscaPelaPagina(Pagina * paginaDaChave, int chave){
     for(int i = 0; i < MAX_CHAVES; i++){
         if(paginaDaChave -> chaves[i].chave == chave)
             return paginaDaChave -> chaves[i].rrn;
@@ -135,7 +165,7 @@ int buscaPelaPagina(RegistroDeDados * paginaDaChave, int chave){
     return NAO_ENCONTRADO;
 }
 
-int pesquisaProximaPagina(RegistroDeDados * paginaDaChave, int chave){
+int pesquisaProximaPagina(Pagina * paginaDaChave, int chave){
     int i;
     for(i = 0; i < paginaDaChave -> numeroDeChaves; i++){
         if(paginaDaChave -> chaves[i].chave > chave)
@@ -146,23 +176,23 @@ int pesquisaProximaPagina(RegistroDeDados * paginaDaChave, int chave){
 }
 
 int pesquisaRecursiva(Indice * indice, int rrn, int chave
-        , RegistroDeDados * paginaAtual, int posicaoDaChave){
+        , Pagina * paginaAtual, int posicaoDaChave){
 
     int rrnDoBinario;
     int rrnProximaPagina;
     if(rrn == RRN_PAGINA_VAZIA){
-        destroyRegistroDeDados(&paginaAtual);
+        destroyPagina(&paginaAtual);
         return NAO_ENCONTRADO;
     }
     else{
         rrnDoBinario = buscaPelaPagina(paginaAtual, chave);
         if(rrnDoBinario != NAO_ENCONTRADO){
-            destroyRegistroDeDados(&paginaAtual);
+            destroyPagina(&paginaAtual);
             return rrnDoBinario;
         }
         else{
             rrnProximaPagina = pesquisaProximaPagina(paginaAtual, chave);
-            destroyRegistroDeDados(&paginaAtual);
+            destroyPagina(&paginaAtual);
             paginaAtual = carregaPagina(indice, rrnProximaPagina);
             pesquisaRecursiva(indice, rrnProximaPagina, chave,
                 paginaAtual, posicaoDaChave);
@@ -175,6 +205,22 @@ int pesquisaIndice(Indice * indice, int chave){
     // TODO: pesquisa que vai ser colocada no .h e inserção
 }
 
-void inserir(){
+void inserir(Indice * indice, int rrn, int chave){
+    if(isIndiceVazio(indice)){
+        criaRaiz(indice);
+    }
+    PosicaoDoRegistro * posicaoDoRegistro = pesquisaIndice_(chave);
+    Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
+    if(paginaTemEspaco(pagina)){
+        ChaveRrn * chaveRrn = criaChaveRrn(chave, rrn);
+        escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, chaveRrn);
+        closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
+        destroyChaveRrn(&chaveRrn);
+    }
 
+    
 }
+
+// void inserir_(Indice * indice){
+
+// }
