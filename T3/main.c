@@ -234,16 +234,18 @@ void imprimeComFiltro(){
 }
 
 
-void pesquisaPorRRN(){
+void pesquisaPorRRN(int rrn){
   FILE * binario;
   Header * header;
   Baby * baby;
   if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
     return;
 
-  int rrn;
   int rrnMaximo = header->RRNproxRegistro;
-  scanf("%d", &rrn);
+
+  if (rrn == -1){
+    scanf("%d", &rrn);
+  }
 
   baby = readRegistros(binario, rrn);
   // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
@@ -342,6 +344,28 @@ void criaIndiceParaBinExistente(){
   closeIndice(&indice);
 }
 
+void pesquisaIndice(){
+  FILE * binario;
+  Header * header;
+  if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
+    return;
+  char nomeDoArquivoDeIndice[128];
+  scanf("%s", nomeDoArquivoDeIndice);
+  Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_EXISTENTE);
+  if(indice == NULL)
+    printf("Falha no processamento do arquivo\n");
+
+  char campo[50];
+  int valor;
+  scanf("%s %d", &campo, &valor);
+
+  int rrn = pesquisaIndice_(indice, valor);
+  pesquisaPorRRN(valor);
+
+  closeHeaderEBinario(&header, &binario);
+  closeIndice(&indice);
+}
+
 int main(){
 
   int opcao;
@@ -362,7 +386,7 @@ int main(){
       break;
 
     case 4:
-      pesquisaPorRRN();
+      pesquisaPorRRN(-1);
       break;
 
     case 5:
@@ -380,6 +404,11 @@ int main(){
     case 8:
       criaIndiceParaBinExistente();
       break;
+
+    case 9:
+      pesquisaIndice();
+      break;
+
   }  
 
   return 0;

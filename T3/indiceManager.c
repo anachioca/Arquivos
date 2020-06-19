@@ -21,18 +21,20 @@ typedef struct Indice_{
     FILE * arquivoDeIndice;
 } Indice;
 
-typedef struct ChaveRrn_{
+// dupla que representa um baby no arquivo de indice
+typedef struct RegistroBaby_{
     int chave;
-    int rrn;
-} ChaveRrn;
+    int rrn; // rrn do baby no arquivo de dados
+} RegistroBaby;
 
 typedef struct Pagina_{
     int nivel;
     int numeroDeChaves;
-    ChaveRrn chaves[MAX_CHAVES];
-    int rrnDescendentes[MAX_CHAVES + 1];
+    RegistroBaby chaves[MAX_CHAVES];
+    int Descendentes[MAX_CHAVES + 1];
 } Pagina;
 
+// representa a posição do baby no arquivo de indice
 typedef struct PosicaoDoRegistro_{
     int rrnPagina;
     int posicaoNaPagina;
@@ -95,7 +97,7 @@ Pagina * initPagina(){
     }
 
     for(int i = 0; i < MAX_CHAVES + 1; i++)
-        Pagina -> rrnDescendentes[i] = -1;
+        Pagina -> Descendentes[i] = -1;
 }
 
 void destroyPagina(Pagina ** Pagina){
@@ -110,16 +112,19 @@ void carregaChave(Indice * indice, Pagina * pagina, int i){
     fread(&(pagina -> chaves[i].rrn), sizeof(int), 1, indice -> arquivoDeIndice);
 }
 
-void escreveChaveNaPagina(Pagina * pagina, int i, ChaveRrn * chaveRrn){
-    pagina -> chaves[i].chave = chaveRrn -> chave;
-    pagina -> chaves[i].rrn = chaveRrn -> rrn;
+// escreve um RegistroBaby na página
+void escreveChaveNaPagina(Pagina * pagina, int i, RegistroBaby * RegistroBaby){
+    pagina -> chaves[i].chave = RegistroBaby -> chave;
+    pagina -> chaves[i].rrn = RegistroBaby -> rrn;
 }
 
-void salvaChave(Indice * indice, ChaveRrn chaveRrn){
-    fwrite(chaveRrn.chave, sizeof(int), 1, indice -> arquivoDeIndice);
-    fwrite(chaveRrn.rrn, sizeof(int), 1, indice -> arquivoDeIndice);
+// escreve um RegistroBaby no arquivo de indice
+void salvaChave(Indice * indice, RegistroBaby RegistroBaby){
+    fwrite(RegistroBaby.chave, sizeof(int), 1, indice -> arquivoDeIndice);
+    fwrite(RegistroBaby.rrn, sizeof(int), 1, indice -> arquivoDeIndice);
 }
 
+// escreve no arquivo de indice uma página
 void closePagina(Indice * indice, Pagina ** pagina, int rrnPagina){
     long posicaoInicial = ftell(indice -> arquivoDeIndice);
     long posicaoFinal = rrnPagina * TAM_PAGINA + TAM_CABECALHO;
@@ -128,13 +133,15 @@ void closePagina(Indice * indice, Pagina ** pagina, int rrnPagina){
 
     fwrite(&((*pagina) -> nivel), sizeof(int), 1, indice -> arquivoDeIndice);
     fwrite(&((*pagina) -> numeroDeChaves), sizeof(int), 1, indice -> arquivoDeIndice);
+
+    // if chave == -1 escrever lixo!!!
     for(int i = 0; i < (*pagina) -> numeroDeChaves; i++)
         salvaChave(indice, (*pagina) -> chaves[i]);
 
-    fwrite((*pagina) -> rrnDescendentes, sizeof(int)
-        , (*pagina) -> numeroDeChaves + 1, indice -> arquivoDeIndice);
+    fwrite((*pagina) -> Descendentes, sizeof(int), (*pagina) -> numeroDeChaves + 1, indice -> arquivoDeIndice);
 }
 
+// função que traz uma página do arquivo de indice para a RAM
 Pagina * carregaPagina(Indice * indice, int rrn){
 
     if(rrn == RRN_PAGINA_VAZIA)
@@ -149,7 +156,7 @@ Pagina * carregaPagina(Indice * indice, int rrn){
     fread(&(pagina -> numeroDeChaves), sizeof(int), 1, indice -> arquivoDeIndice);
     for(int i = 0; i < MAX_CHAVES; i++)
         carregaChave(indice, pagina, i);
-    fread(&(pagina -> rrnDescendentes), sizeof(int), MAX_CHAVES + 1
+    fread(&(pagina -> Descendentes), sizeof(int), MAX_CHAVES + 1
         , indice -> arquivoDeIndice);
 
     fseek(indice -> arquivoDeIndice, posicao, SEEK_SET);
@@ -157,6 +164,9 @@ Pagina * carregaPagina(Indice * indice, int rrn){
     return pagina;
 }
 
+// verifica se a chave se encontra na página atual
+// caso esteja, retorna o RRN do registro no arquivo de dados
+// caso contrário retorna NAO_ENCONTRADO
 int buscaPelaPagina(Pagina * paginaDaChave, int chave){
     for(int i = 0; i < MAX_CHAVES; i++){
         if(paginaDaChave -> chaves[i].chave == chave)
@@ -165,44 +175,54 @@ int buscaPelaPagina(Pagina * paginaDaChave, int chave){
     return NAO_ENCONTRADO;
 }
 
+// procura, entre os descendentes da página atual, qual
+// será a próxima página a ser pesquisada
 int pesquisaProximaPagina(Pagina * paginaDaChave, int chave){
     int i;
     for(i = 0; i < paginaDaChave -> numeroDeChaves; i++){
         if(paginaDaChave -> chaves[i].chave > chave)
-            return paginaDaChave -> rrnDescendentes[i];
+            return paginaDaChave -> Descendentes[i];
     }
-    return paginaDaChave -> rrnDescendentes[i];
+    return paginaDaChave -> Descendentes[i];
 
 }
 
-int pesquisaRecursiva(Indice * indice, int rrn, int chave
-        , Pagina * paginaAtual, int posicaoDaChave){
+// retorna a posição exata do baby no arquivo de dados
+// ou seja, o RRN no binário de dados
+int pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagina * paginaAtual, int chaveEncontrada){
 
-    int rrnDoBinario;
+    int rrnBaby; // RRN do registro desejado no arquivo de dados
     int rrnProximaPagina;
+
+    // if(chaveEncontrada != -1){
+    //     return chaveEncontrada;
+    // }
     if(rrn == RRN_PAGINA_VAZIA){
         destroyPagina(&paginaAtual);
         return NAO_ENCONTRADO;
     }
     else{
-        rrnDoBinario = buscaPelaPagina(paginaAtual, chave);
-        if(rrnDoBinario != NAO_ENCONTRADO){
+        
+        rrnBaby = buscaPelaPagina(paginaAtual, chave);
+        if(rrnBaby != NAO_ENCONTRADO){
             destroyPagina(&paginaAtual);
-            return rrnDoBinario;
+            // chaveEncontrada = rrnBaby;
+            return rrnBaby;
         }
         else{
             rrnProximaPagina = pesquisaProximaPagina(paginaAtual, chave);
             destroyPagina(&paginaAtual);
             paginaAtual = carregaPagina(indice, rrnProximaPagina);
-            pesquisaRecursiva(indice, rrnProximaPagina, chave,
-                paginaAtual, posicaoDaChave);
+            pesquisaRecursiva(indice, rrnProximaPagina, chave, paginaAtual, chaveEncontrada);
         }
     }
 }
 
-int pesquisaIndice(Indice * indice, int chave){
-    // return pesquisaRecursiva(indice -> noRaiz, chave, )
-    // TODO: pesquisa que vai ser colocada no .h e inserção
+// Pesquisa no arquivo de indice por uma chave
+// e retorna o RRN do baby no arquivo de dados
+int pesquisaIndice_(Indice * indice, int chave){
+    Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
+    return pesquisaRecursiva(indice, indice->noRaiz, chave, paginaRaiz, -1);
 }
 
 void inserir(Indice * indice, int rrn, int chave){
@@ -212,13 +232,17 @@ void inserir(Indice * indice, int rrn, int chave){
     PosicaoDoRegistro * posicaoDoRegistro = pesquisaIndice_(chave);
     Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
     if(paginaTemEspaco(pagina)){
-        ChaveRrn * chaveRrn = criaChaveRrn(chave, rrn);
-        escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, chaveRrn);
+        RegistroBaby * RegistroBaby = criaRegistroBaby(chave, rrn);
+        escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, RegistroBaby);
         closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
-        destroyChaveRrn(&chaveRrn);
+        destroyRegistroBaby(&RegistroBaby);
     }
 
-    
+}
+
+int isIndiceVazio(Indice * indice){
+    if (indice->nroChaves == 0) return 1;
+    else return 0;
 }
 
 // void inserir_(Indice * indice){
