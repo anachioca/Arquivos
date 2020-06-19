@@ -346,7 +346,7 @@ void criaIndiceParaBinExistente(){
   //lê os registros e guarda no arquivo de indice
   for (int i = 0; i < rrnMaximo; i++){
     baby = readRegistros(binario, i);
-    if (baby != NULL) inserir(indice, i, baby->idNascimento);
+    //if (baby != NULL) inserir(indice, i, baby->idNascimento);
     printBaby(baby);
     destroyBaby(&baby);
   }
@@ -368,10 +368,14 @@ void pesquisaIndice(){
 
   char campo[50];
   int valor;
-  scanf("%s %d", &campo, &valor);
+  scanf("%s %d", campo, &valor);
+
+  printf("RRN: %d\n", valor);
 
   int rrn = pesquisaIndice_(indice, valor);
-  pesquisaPorRRN(valor);
+  printf("RRN: %d", rrn);
+  if (rrn != -1) pesquisaPorRRN(valor);
+  else if (rrn == -1) printf("Registro Inexistente");
 
   closeHeaderEBinario(&header, &binario);
   closeIndice(&indice);

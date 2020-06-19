@@ -1,7 +1,7 @@
 all: prog
 
 run: prog
-	./prog < 1.in
+	./prog
 	
 valgrind: prog
 	gcc -o prog -g -Wall -ggdb3 *.o -g
