@@ -3,6 +3,7 @@
 // Otto Cruz Fernandes || NUSP: 11275130
 
 #include "indiceManager.h"
+#include "baby.h"
 
 #define MAX_CHAVES 5
 #define NAO_ENCONTRADO -1
@@ -225,6 +226,7 @@ int pesquisaIndice_(Indice * indice, int chave){
     return pesquisaRecursiva(indice, indice->noRaiz, chave, paginaRaiz, -1);
 }
 
+// insere um novo registroBaby ao arquivo de indice
 void inserir(Indice * indice, int rrn, int chave){
     if(isIndiceVazio(indice)){
         criaRaiz(indice);
@@ -244,7 +246,3 @@ int isIndiceVazio(Indice * indice){
     if (indice->nroChaves == 0) return 1;
     else return 0;
 }
-
-// void inserir_(Indice * indice){
-
-// }

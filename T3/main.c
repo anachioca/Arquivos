@@ -340,6 +340,17 @@ void criaIndiceParaBinExistente(){
   if(indice == NULL)
     printf("Falha no processamento do arquivo\n");
 
+  int rrnMaximo = header->RRNproxRegistro;
+  Baby * baby;
+
+  //lê os registros e guarda no arquivo de indice
+  for (int i = 0; i < rrnMaximo; i++){
+    baby = readRegistros(binario, i);
+    if (baby != NULL) inserir(indice, i, baby->idNascimento);
+    printBaby(baby);
+    destroyBaby(&baby);
+  }
+
   closeHeaderEBinario(&header, &binario);
   closeIndice(&indice);
 }
