@@ -209,10 +209,6 @@ int pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagina * paginaAtual,
     int rrnProximaPagina;
     printf("oi");
 
-    // if(chaveEncontrada != -1){
-    //      return chaveEncontrada;
-    // }
-
     if(rrn == RRN_PAGINA_VAZIA){
         destroyPagina(&paginaAtual);
         return NAO_ENCONTRADO;
@@ -237,6 +233,7 @@ int pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagina * paginaAtual,
 // Pesquisa no arquivo de indice por uma chave
 // e retorna o RRN do baby no arquivo de dados
 int pesquisaIndice_(Indice * indice, int chave){
+    if (indice->noRaiz == -1) return -1;
     Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
     printf("indice->noRaiz: %d\n", indice->noRaiz);
     return pesquisaRecursiva(indice, indice->noRaiz, chave, paginaRaiz, -1);

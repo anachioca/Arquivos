@@ -368,15 +368,19 @@ void pesquisaIndice(){
 
   char campo[50];
   int valor;
+  Baby * baby;
+
   scanf("%s %d", campo, &valor);
+  int rrn = pesquisaIndice_(indice, valor); 
 
-  printf("RRN: %d\n", valor);
+  if (rrn != -1){
+    baby = readRegistros(binario, rrn);
+    // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
+    if(baby != NULL) printBaby(baby);
+  }
+  if (rrn == -1 || baby == NULL) printf("Registro Inexistente");
 
-  int rrn = pesquisaIndice_(indice, valor);
-  printf("RRN: %d", rrn);
-  if (rrn != -1) pesquisaPorRRN(valor);
-  else if (rrn == -1) printf("Registro Inexistente");
-
+  destroyBaby(&baby);
   closeHeaderEBinario(&header, &binario);
   closeIndice(&indice);
 }
