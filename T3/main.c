@@ -360,18 +360,28 @@ void pesquisaIndice(){
   Header * header;
   if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
     return;
+
+  int rrnMaximo = header->RRNproxRegistro;
+
+  // caso não existam registros no arquivo
+  if (rrnMaximo == 0){
+    printf("Registro Inexistente.");
+    return;
+  }
+  
   char nomeDoArquivoDeIndice[128];
   scanf("%s", nomeDoArquivoDeIndice);
   Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_EXISTENTE);
+
   if(indice == NULL)
     printf("Falha no processamento do arquivo\n");
-
+  
   char campo[50];
   int valor;
   Baby * baby;
 
   scanf("%s %d", campo, &valor);
-  int rrn = pesquisaIndice_(indice, valor); 
+  int rrn = pesquisaIndice_(indice, valor); // rrn do registro no arquivo de dados
 
   if (rrn != -1){
     baby = readRegistros(binario, rrn);
