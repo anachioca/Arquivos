@@ -386,7 +386,7 @@ void pesquisaIndice(){
 
   scanf("%s %d", campo, &valor);
   int * count = malloc(sizeof(int));
-  count[0] = 0;
+  *count = 0;
   int rrn = pesquisaIndice_(indice, valor, count); // rrn do registro no arquivo de dados
 
   //printf("RRN encontrado: %d, RRN máximo dados: %d\n", rrn, header->RRNproxRegistro);
@@ -398,7 +398,7 @@ void pesquisaIndice(){
     if(baby != NULL) {
       printBaby(baby);
       //printBabyFull(baby);
-      printf("Quantidade de paginas da arvore-B acessadas: %d", *count);
+      printf("Quantidade de paginas da arvore-B acessadas: %d\n", *count);
     } else if (baby == NULL) printf("Registro Inexistente");
     destroyBaby(&baby);
   }
