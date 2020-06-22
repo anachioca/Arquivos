@@ -133,6 +133,12 @@ void destroyPagina(Pagina ** Pagina){
     *Pagina = NULL;
 }
 
+void destroyRegistroBaby(RegistroBaby ** RB){
+    if(*RB == NULL) return;
+    free(*RB);
+    *RB = NULL;
+}
+
 void carregaChave(Indice * indice, Pagina * pagina, int i){
     fread(&(pagina -> chaves[i].chave), sizeof(int), 1, indice -> arquivoDeIndice);
     fread(&(pagina -> chaves[i].rrn), sizeof(int), 1, indice -> arquivoDeIndice);
@@ -264,22 +270,37 @@ int pesquisaIndice_(Indice * indice, int chave, int * count){
     return getRRNIndice(indice, PR);
 }
 
+RegistroBaby * criaRegistroBaby(int chave, int rrn){
+    RegistroBaby * RB = malloc(sizeof(RegistroBaby));
+    RB->chave = chave;
+    RB->rrn = rrn;
+    return RB;
+}
+
 // insere um novo registroBaby ao arquivo de indice
-// void inserir(Indice * indice, int rrn, int chave){
-//     if(indice->nroChaves == 0){
-//         Pagina * raiz = initPagina();
-//         // setar como raiz?
-//     }
+void inserir(Indice * indice, int rrn, int chave){
+    if(indice->nroChaves == 0){
+        Pagina * raiz = initPagina();
+        // setar como raiz?
+    }
+
+    int * count = malloc(sizeof(int));
+    count[0] = 0;
     
-//     PosicaoDoRegistro * posicaoDoRegistro = pesquisaIndice_(indice, chave);
-//     Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
-//     if(pagina->numeroDeChaves < 5){ // se ainda tem espaço no nó, insere a chave
-//         RegistroBaby * RegistroBaby = criaRegistroBaby(chave, rrn);
-//         escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, RegistroBaby);
-//         closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
-//         destroyRegistroBaby(&RegistroBaby);
-//     }
-//     else {
-//         // spliiiit e promotion
-//     }
-// }
+    PosicaoDoRegistro * posicaoDoRegistro = pesquisaIndice_(indice, chave, count);
+    Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
+
+    if(pagina->numeroDeChaves < 5){ // se ainda tem espaço no nó, insere a chave
+        // procurar a posição exata dentro da página:
+        posicaoDoRegistro->posicaoNaPagina = buscaPelaPagina(pagina, chave);
+        RegistroBaby * RegistroBaby = criaRegistroBaby(chave, rrn);
+        escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, RegistroBaby);
+        closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
+        destroyRegistroBaby(&RegistroBaby);
+    }
+    else {
+        // spliiiit e promotion
+    }
+
+    free(count);
+}

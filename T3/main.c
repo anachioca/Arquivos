@@ -403,6 +403,7 @@ void pesquisaIndice(){
     destroyBaby(&baby);
   }
   
+  free(count);
   closeHeaderEBinario(&header, &binario);
   closeIndice(&indice);
 }
