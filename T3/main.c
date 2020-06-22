@@ -233,8 +233,7 @@ void imprimeComFiltro(){
   closeHeaderEBinario(&header, &binario);
 }
 
-
-void pesquisaPorRRN(int rrn){
+void pesquisaPorRRN(){
   FILE * binario;
   Header * header;
   Baby * baby;
@@ -242,10 +241,8 @@ void pesquisaPorRRN(int rrn){
     return;
 
   int rrnMaximo = header->RRNproxRegistro;
-
-  if (rrn == -1){
-    scanf("%d", &rrn);
-  }
+  int rrn;
+  scanf("%d", &rrn);
 
   baby = readRegistros(binario, rrn);
   // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
@@ -366,6 +363,7 @@ void pesquisaIndice(){
   // caso não existam registros no arquivo
   if (rrnMaximo == 0){
     printf("Registro Inexistente.");
+    closeHeaderEBinario(&header, &binario);
     return;
   }
   
@@ -373,8 +371,12 @@ void pesquisaIndice(){
   scanf("%s", nomeDoArquivoDeIndice);
   Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_EXISTENTE);
 
-  if(indice == NULL)
-    printf("Falha no processamento do arquivo\n");
+  if(indice == NULL || getStatusIndice(indice) == '0'){
+    printf("Falha no processamento do arquivo.");
+    closeHeaderEBinario(&header, &binario);
+    closeIndice(&indice);
+    return;
+  }
   
   char campo[50];
   int valor;
@@ -383,14 +385,19 @@ void pesquisaIndice(){
   scanf("%s %d", campo, &valor);
   int rrn = pesquisaIndice_(indice, valor); // rrn do registro no arquivo de dados
 
-  if (rrn != -1){
+  //printf("RRN encontrado: %d, RRN máximo dados: %d\n", rrn, header->RRNproxRegistro);
+
+  if (rrn > header->RRNproxRegistro || rrn == -1) printf("Registro Inexistente");
+  else if (rrn != -1){
     baby = readRegistros(binario, rrn);
     // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
-    if(baby != NULL) printBaby(baby);
+    if(baby != NULL) {
+      printBaby(baby);
+      printBabyFull(baby);
+    } else if (baby == NULL) printf("Registro Inexistente");
+    destroyBaby(&baby);
   }
-  if (rrn == -1 || baby == NULL) printf("Registro Inexistente");
-
-  destroyBaby(&baby);
+  
   closeHeaderEBinario(&header, &binario);
   closeIndice(&indice);
 }
@@ -415,7 +422,7 @@ int main(){
       break;
 
     case 4:
-      pesquisaPorRRN(-1);
+      pesquisaPorRRN();
       break;
 
     case 5:

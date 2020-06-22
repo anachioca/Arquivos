@@ -5,9 +5,10 @@
 #include "indiceManager.h"
 #include "baby.h"
 
+#define ORDEM 6
 #define MAX_CHAVES 5
-#define NAO_ENCONTRADO -1
 
+#define NAO_ENCONTRADO -1
 #define RRN_PAGINA_VAZIA -1
 
 #define TAM_PAGINA 72
@@ -24,7 +25,7 @@ typedef struct Indice_{
 
 // dupla que representa um baby no arquivo de indice
 typedef struct RegistroBaby_{
-    int chave;
+    int chave; // era pra ser char aaaaaaa !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     int rrn; // rrn do baby no arquivo de dados
 } RegistroBaby;
 
@@ -49,17 +50,14 @@ Indice * initIndice(char * nomeDoBinario, MODO_DE_ABERTURA modo){
 
     if(indice -> arquivoDeIndice == NULL){
         free(indice);
-        printf("null??\n");
         return NULL;
     } else if (!strcmp(modo, ARQUIVO_NOVO)){
-        printf("modo wb+");
         indice -> status = '0';
         indice -> noRaiz = -1;
         indice -> nroNiveis = 0;
         indice -> proxRRN = 0;
         indice -> nroChaves = 0;
     } else if (!strcmp(modo, ARQUIVO_EXISTENTE)){
-        printf("modo rb+\n");
         fseek(indice->arquivoDeIndice, 0, SEEK_SET);
         fread(&indice->status, sizeof(char), 1, indice->arquivoDeIndice);
         fread(&indice->noRaiz, sizeof(int), 1, indice->arquivoDeIndice);
@@ -68,9 +66,24 @@ Indice * initIndice(char * nomeDoBinario, MODO_DE_ABERTURA modo){
         fread(&indice->nroChaves, sizeof(int), 1, indice->arquivoDeIndice);
     }   
 
-    printf("status: %c, noRaiz: %d\n", indice->status, indice->noRaiz);
-
 	return indice;
+}
+
+char getStatusIndice(Indice * indice){
+    return indice->status;
+}
+
+int getNoRaiz(Indice * indice){
+    return indice->noRaiz;
+}
+
+// função para debugar
+void printHeaderIndice(Indice * indice){
+    printf("\nstatus: %c\n", indice->status);
+    printf("noRaiz: %d\n", indice->noRaiz);
+    printf("nroNiveis: %d\n", indice->nroNiveis);
+    printf("proxRRN: %d\n", indice->proxRRN);
+    printf("nroChaves: %d\n", indice->nroChaves);
 }
 
 void closeIndice(Indice ** indice){
@@ -116,7 +129,6 @@ Pagina * initPagina(){
 
 void destroyPagina(Pagina ** Pagina){
     if(*Pagina == NULL) return;
-
     free(*Pagina);
     *Pagina = NULL;
 }
@@ -184,7 +196,7 @@ Pagina * carregaPagina(Indice * indice, int rrn){
 int buscaPelaPagina(Pagina * paginaDaChave, int chave){
     for(int i = 0; i < MAX_CHAVES; i++){
         if(paginaDaChave -> chaves[i].chave == chave)
-            return paginaDaChave -> chaves[i].rrn;
+            return i;
     }
     return NAO_ENCONTRADO;
 }
@@ -203,47 +215,61 @@ int pesquisaProximaPagina(Pagina * paginaDaChave, int chave){
 
 // retorna a posição exata do baby no arquivo de dados
 // ou seja, o RRN no binário de dados
-int pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagina * paginaAtual, int chaveEncontrada){
+PosicaoDoRegistro * pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagina * paginaAtual, int chaveEncontrada, int rrnPaginaAnterior){
 
-    int rrnBaby; // RRN do registro desejado no arquivo de dados
+    PosicaoDoRegistro * PR = malloc(sizeof(PosicaoDoRegistro));
+    PR ->posicaoNaPagina = -1;
     int rrnProximaPagina;
-    printf("oi");
 
     if(rrn == RRN_PAGINA_VAZIA){
         destroyPagina(&paginaAtual);
-        return NAO_ENCONTRADO;
+        PR->rrnPagina = rrnPaginaAnterior;
+        return PR;
     }
 
     else{
-        
-        rrnBaby = buscaPelaPagina(paginaAtual, chave);
-        if(rrnBaby != NAO_ENCONTRADO){
+
+        PR->rrnPagina = rrn;
+        PR->posicaoNaPagina = buscaPelaPagina(paginaAtual, chave);
+        if(PR->posicaoNaPagina != NAO_ENCONTRADO){ // a chave foi encontrada
             destroyPagina(&paginaAtual);
-            return rrnBaby;
+            return PR;
         }
-        else{
+        else{ // caso contrário continua para a próxima página
             rrnProximaPagina = pesquisaProximaPagina(paginaAtual, chave);
             destroyPagina(&paginaAtual);
             paginaAtual = carregaPagina(indice, rrnProximaPagina);
-            return pesquisaRecursiva(indice, rrnProximaPagina, chave, paginaAtual, chaveEncontrada);
+            return pesquisaRecursiva(indice, rrnProximaPagina, chave, paginaAtual, chaveEncontrada, rrn);
         }
     }
 }
 
+// retorna o RRN do baby na posição PR
+int getRRNIndice(Indice * indice, PosicaoDoRegistro * PR){
+    Pagina * p = carregaPagina(indice, PR->rrnPagina);
+    return p->chaves[PR->posicaoNaPagina].rrn;
+}
+
 // Pesquisa no arquivo de indice por uma chave
-// e retorna o RRN do baby no arquivo de dados
+// e retorna a posição do exata do registro no arquivo de indice
 int pesquisaIndice_(Indice * indice, int chave){
     if (indice->noRaiz == -1) return -1;
     Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
-    printf("indice->noRaiz: %d\n", indice->noRaiz);
-    return pesquisaRecursiva(indice, indice->noRaiz, chave, paginaRaiz, -1);
+    PosicaoDoRegistro * PR = pesquisaRecursiva(indice, indice->noRaiz, chave, paginaRaiz, -1, -1);
+    if (PR->rrnPagina == -1) return NAO_ENCONTRADO;
+
+    // tendo em mãos a posição exata do registro no indice, retorna o RRN 
+    // do registro no arquivo de dados
+    return getRRNIndice(indice, PR);
 }
 
 // insere um novo registroBaby ao arquivo de indice
 // void inserir(Indice * indice, int rrn, int chave){
-//     if(isIndiceVazio(indice)){
-//         criaRaiz(indice);
+//     if(indice->nroChaves == 0){
+//         Pagina * raiz = initPagina();
+//         // setar como raiz?
 //     }
+    
 //     PosicaoDoRegistro * posicaoDoRegistro = pesquisaIndice_(indice, chave);
 //     Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
 //     if(paginaTemEspaco(pagina)){
@@ -252,10 +278,4 @@ int pesquisaIndice_(Indice * indice, int chave){
 //         closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
 //         destroyRegistroBaby(&RegistroBaby);
 //     }
-
-// }
-
-// int isIndiceVazio(Indice * indice){
-//     if (indice->nroChaves == 0) return 1;
-//     else return 0;
 // }

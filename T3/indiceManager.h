@@ -15,6 +15,10 @@ Indice * initIndice(char * nomeDoBinario, MODO_DE_ABERTURA modo);
 
 void closeIndice(Indice ** indice);
 
+char getStatusIndice(Indice * indice);
+
+int getNoRaiz(Indice * indice);
+
 void inserir(Indice * indice, int rrn, int chave);
 
 int pesquisaIndice_(Indice * indice, int chave);
