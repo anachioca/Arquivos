@@ -334,8 +334,10 @@ void criaIndiceParaBinExistente(){
   char nomeDoArquivoDeIndice[128];
   scanf("%s", nomeDoArquivoDeIndice);
   Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_NOVO);
-  if(indice == NULL)
+  if(indice == NULL || getStatusIndice(indice) == '0'){
     printf("Falha no processamento do arquivo\n");
+    return;
+  }
 
   int rrnMaximo = header->RRNproxRegistro;
   Baby * baby;
@@ -383,7 +385,9 @@ void pesquisaIndice(){
   Baby * baby;
 
   scanf("%s %d", campo, &valor);
-  int rrn = pesquisaIndice_(indice, valor); // rrn do registro no arquivo de dados
+  int * count = malloc(sizeof(int));
+  count[0] = 0;
+  int rrn = pesquisaIndice_(indice, valor, count); // rrn do registro no arquivo de dados
 
   //printf("RRN encontrado: %d, RRN máximo dados: %d\n", rrn, header->RRNproxRegistro);
 
@@ -393,7 +397,8 @@ void pesquisaIndice(){
     // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
     if(baby != NULL) {
       printBaby(baby);
-      printBabyFull(baby);
+      //printBabyFull(baby);
+      printf("Quantidade de paginas da arvore-B acessadas: %d", *count);
     } else if (baby == NULL) printf("Registro Inexistente");
     destroyBaby(&baby);
   }

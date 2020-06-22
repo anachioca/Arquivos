@@ -21,6 +21,6 @@ int getNoRaiz(Indice * indice);
 
 void inserir(Indice * indice, int rrn, int chave);
 
-int pesquisaIndice_(Indice * indice, int chave);
+int pesquisaIndice_(Indice * indice, int chave, int * count);
 
 #endif

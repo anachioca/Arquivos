@@ -146,8 +146,8 @@ void escreveChaveNaPagina(Pagina * pagina, int i, RegistroBaby * RegistroBaby){
 
 // escreve um RegistroBaby no arquivo de indice
 void salvaChave(Indice * indice, RegistroBaby RegistroBaby){
-    fwrite(RegistroBaby.chave, sizeof(int), 1, indice -> arquivoDeIndice);
-    fwrite(RegistroBaby.rrn, sizeof(int), 1, indice -> arquivoDeIndice);
+    fwrite(&RegistroBaby.chave, sizeof(int), 1, indice -> arquivoDeIndice);
+    fwrite(&RegistroBaby.rrn, sizeof(int), 1, indice -> arquivoDeIndice);
 }
 
 // escreve no arquivo de indice uma página
@@ -215,11 +215,12 @@ int pesquisaProximaPagina(Pagina * paginaDaChave, int chave){
 
 // retorna a posição exata do baby no arquivo de dados
 // ou seja, o RRN no binário de dados
-PosicaoDoRegistro * pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagina * paginaAtual, int chaveEncontrada, int rrnPaginaAnterior){
+PosicaoDoRegistro * pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagina * paginaAtual, int rrnPaginaAnterior, int * count){
 
     PosicaoDoRegistro * PR = malloc(sizeof(PosicaoDoRegistro));
     PR ->posicaoNaPagina = -1;
     int rrnProximaPagina;
+    count[0]++;
 
     if(rrn == RRN_PAGINA_VAZIA){
         destroyPagina(&paginaAtual);
@@ -239,7 +240,7 @@ PosicaoDoRegistro * pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagin
             rrnProximaPagina = pesquisaProximaPagina(paginaAtual, chave);
             destroyPagina(&paginaAtual);
             paginaAtual = carregaPagina(indice, rrnProximaPagina);
-            return pesquisaRecursiva(indice, rrnProximaPagina, chave, paginaAtual, chaveEncontrada, rrn);
+            return pesquisaRecursiva(indice, rrnProximaPagina, chave, paginaAtual, rrn, count);
         }
     }
 }
@@ -252,10 +253,10 @@ int getRRNIndice(Indice * indice, PosicaoDoRegistro * PR){
 
 // Pesquisa no arquivo de indice por uma chave
 // e retorna a posição do exata do registro no arquivo de indice
-int pesquisaIndice_(Indice * indice, int chave){
+int pesquisaIndice_(Indice * indice, int chave, int * count){
     if (indice->noRaiz == -1) return -1;
     Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
-    PosicaoDoRegistro * PR = pesquisaRecursiva(indice, indice->noRaiz, chave, paginaRaiz, -1, -1);
+    PosicaoDoRegistro * PR = pesquisaRecursiva(indice, indice->noRaiz, chave, paginaRaiz, -1, count);
     if (PR->rrnPagina == -1) return NAO_ENCONTRADO;
 
     // tendo em mãos a posição exata do registro no indice, retorna o RRN 
@@ -272,10 +273,13 @@ int pesquisaIndice_(Indice * indice, int chave){
     
 //     PosicaoDoRegistro * posicaoDoRegistro = pesquisaIndice_(indice, chave);
 //     Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
-//     if(paginaTemEspaco(pagina)){
+//     if(pagina->numeroDeChaves < 5){ // se ainda tem espaço no nó, insere a chave
 //         RegistroBaby * RegistroBaby = criaRegistroBaby(chave, rrn);
 //         escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, RegistroBaby);
 //         closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
 //         destroyRegistroBaby(&RegistroBaby);
+//     }
+//     else {
+//         // spliiiit e promotion
 //     }
 // }
