@@ -363,6 +363,10 @@ void inserir(Indice * indice, int rrn, int chave){
     }
     else {
         // spliiiit e promotion
+        Pagina * paginaSplit = initPagina();
+        // ordena os 6 elementos e divide entre as duas páginas
+        divideElementos(paginaSplit, pagina, chave, rrn);
+        //promove paginaSplit->chaves[0]
     }
     
     free(pagina);
