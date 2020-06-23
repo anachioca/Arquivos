@@ -173,7 +173,7 @@ void printPagina(Pagina * pagina){
 }
 
 // escreve no arquivo de indice uma página
-void closePagina(Indice * indice, Pagina ** pagina, int rrnPagina){
+void salvaPagina(Indice * indice, Pagina ** pagina, int rrnPagina){
     long posicaoInicial = ftell(indice -> arquivoDeIndice);
     long posicaoPagina = rrnPagina * TAM_PAGINA + TAM_CABECALHO;
     if(posicaoInicial != posicaoPagina);
@@ -218,12 +218,20 @@ Pagina * carregaPagina(Indice * indice, int rrn){
 // verifica se a chave se encontra na página atual
 // caso esteja, retorna o RRN do registro no arquivo de dados
 // caso contrário retorna NAO_ENCONTRADO
-int buscaPelaPagina(Pagina * paginaDaChave, int chave, int * i){
+int buscaPelaChaveNaPagina(Pagina * paginaDaChave, int chave, int * i){
     for(*i = 0; *i < MAX_CHAVES; (*i)++){
-        if(paginaDaChave -> chaves[*i].chave >= chave)
+        if(paginaDaChave -> chaves[*i].chave == chave)
             return ENCONTRADO;
     }
     return NAO_ENCONTRADO;
+}
+
+void buscaPelaPosicaoNaPagina(Pagina * paginaDaChave, int chave, int * i){
+    for(*i = 0; *i < MAX_CHAVES; (*i)++){
+        if(paginaDaChave -> chaves[*i].chave >= chave)
+            break;
+    }
+    return;
 }
 
 // procura, entre os descendentes da página atual, qual
@@ -256,15 +264,15 @@ PosicaoDoRegistro * pesquisaRecursiva(Indice * indice, int rrn, int chave, Pagin
     else{
 
         PR->rrnPagina = rrn;
-        if(buscaPelaPagina(paginaAtual, chave, &(PR->posicaoNaPagina)) != NAO_ENCONTRADO){ // a chave foi encontrada
+        if(buscaPelaChaveNaPagina(paginaAtual, chave, &(PR->posicaoNaPagina)) != NAO_ENCONTRADO){ // a chave foi encontrada
             destroyPagina(&paginaAtual);
             return PR;
         }
         else{ // caso contrário continua para a próxima página
+            free(PR);
             rrnProximaPagina = pesquisaProximaPagina(paginaAtual, chave);
             destroyPagina(&paginaAtual);
             paginaAtual = carregaPagina(indice, rrnProximaPagina);
-            free(PR);
             return pesquisaRecursiva(indice, rrnProximaPagina, chave, paginaAtual, rrn, count);
         }
     }
@@ -330,7 +338,8 @@ void inserir(Indice * indice, int rrn, int chave){
         indice -> proxRRN = 1;
         indice -> nroChaves = 1;
 
-        closePagina(indice, &raiz, 0);
+        salvaPagina(indice, &raiz, 0);
+        free(raiz);
         return;
     }
 
@@ -345,16 +354,18 @@ void inserir(Indice * indice, int rrn, int chave){
 
     if(pagina->numeroDeChaves < 5){ // se ainda tem espaço no nó, insere a chave
         // procurar a posição exata dentro da página:
-        buscaPelaPagina(pagina, chave, &(posicaoDoRegistro->posicaoNaPagina));
+        buscaPelaPosicaoNaPagina(pagina, chave, &(posicaoDoRegistro->posicaoNaPagina));
         RegistroBaby * registroBaby = criaRegistroBaby(chave, rrn);
         escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, registroBaby);
         pagina->numeroDeChaves++;
-        closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
+        salvaPagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
         destroyRegistroBaby(&registroBaby);
     }
     else {
         // spliiiit e promotion
     }
-
+    
+    free(pagina);
+    free(posicaoDoRegistro);
     free(count);
 }
