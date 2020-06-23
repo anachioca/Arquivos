@@ -161,9 +161,9 @@ void salvaChave(Indice * indice, RegistroBaby RegistroBaby){
 // escreve no arquivo de indice uma página
 void closePagina(Indice * indice, Pagina ** pagina, int rrnPagina){
     long posicaoInicial = ftell(indice -> arquivoDeIndice);
-    long posicaoFinal = rrnPagina * TAM_PAGINA + TAM_CABECALHO;
-    if(posicaoInicial != posicaoFinal);
-        fseek(indice -> arquivoDeIndice, posicaoFinal, SEEK_SET);
+    long posicaoPagina = rrnPagina * TAM_PAGINA + TAM_CABECALHO;
+    if(posicaoInicial != posicaoPagina);
+        fseek(indice -> arquivoDeIndice, posicaoPagina, SEEK_SET);
 
     fwrite(&((*pagina) -> nivel), sizeof(int), 1, indice -> arquivoDeIndice);
     fwrite(&((*pagina) -> numeroDeChaves), sizeof(int), 1, indice -> arquivoDeIndice);
@@ -281,36 +281,63 @@ int pesquisaIndice_(Indice * indice, int chave, int * count){
 }
 
 RegistroBaby * criaRegistroBaby(int chave, int rrn){
-    RegistroBaby * RB = malloc(sizeof(RegistroBaby));
-    RB->chave = chave;
-    RB->rrn = rrn;
-    return RB;
+    RegistroBaby * registroBaby = malloc(sizeof(RegistroBaby));
+    registroBaby->chave = chave;
+    registroBaby->rrn = rrn;
+    return registroBaby;
+}
+
+void insereChaveSemOverflow(Indice * indice, int rrn, int chave, int nivel){
+    Pagina * raiz = initPagina();
+    int nroChaves = raiz -> numeroDeChaves;
+    raiz -> chaves[nroChaves].chave = chave;
+    raiz -> chaves[nroChaves].rrn = rrn;
+    raiz -> nivel = nivel;
+    raiz -> numeroDeChaves++;
+
+    indice -> noRaiz = 0;
+    indice -> proxRRN = 1;
+    indice -> nroChaves = 1;
 }
 
 // insere um novo registroBaby ao arquivo de indice
-// void inserir(Indice * indice, int rrn, int chave){
-//     if(indice->nroChaves == 0){
-//         Pagina * raiz = initPagina();
-//         // setar como raiz?
-//     }
+void inserir(Indice * indice, int rrn, int chave){
+    if(indice->nroChaves == 0){
+        Pagina * raiz = initPagina();
+        raiz -> chaves[0].chave = chave;
+        raiz -> chaves[0].rrn = rrn;
+        raiz -> nivel = 1;
+        raiz -> numeroDeChaves = 1;
 
-//     int * count = malloc(sizeof(int));
-//     count[0] = 0;
+        indice -> noRaiz = 0;
+        indice -> nroNiveis = 1;
+        indice -> proxRRN = 1;
+        indice -> nroChaves = 1;
+
+        closePagina(indice, &raiz, 0);
+        return;
+    }
+
+    int * count = malloc(sizeof(int));
+    *count = 0;
     
-//     PosicaoDoRegistro * posicaoDoRegistro = pesquisaIndice_(indice, chave, count);
-//     Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
+    PosicaoDoRegistro * posicaoDoRegistro = pesquisaRecursiva(
+        indice, indice->noRaiz, chave, carregaPagina(indice, indice->noRaiz)
+        , -1, count);
 
-//     if(pagina->numeroDeChaves < 5){ // se ainda tem espaço no nó, insere a chave
-//         // procurar a posição exata dentro da página:
-//         posicaoDoRegistro->posicaoNaPagina = buscaPelaPagina(pagina, chave);
-//         RegistroBaby * RegistroBaby = criaRegistroBaby(chave, rrn);
-//         escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, RegistroBaby);
-//         closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
-//         destroyRegistroBaby(&RegistroBaby);
-//     }
-//     else {
-//         // spliiiit e promotion
-//     }
+    Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
 
-//     free(count);
-// }
+    if(pagina->numeroDeChaves < 5){ // se ainda tem espaço no nó, insere a chave
+        // procurar a posição exata dentro da página:
+        posicaoDoRegistro->posicaoNaPagina = buscaPelaPagina(pagina, chave);
+        RegistroBaby * registroBaby = criaRegistroBaby(chave, rrn);
+        escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, registroBaby);
+        closePagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
+        destroyRegistroBaby(&registroBaby);
+    }
+    else {
+        // spliiiit e promotion
+    }
+
+    free(count);
+}

@@ -1,7 +1,7 @@
 all: prog
 
 run: prog
-	./prog <"Casos Abertos"/5.in
+	./prog
 	
 valgrind: prog
 	gcc -o prog -g -Wall -ggdb3 *.o -g
