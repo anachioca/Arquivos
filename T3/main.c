@@ -334,8 +334,9 @@ void criaIndiceParaBinExistente(){
   char nomeDoArquivoDeIndice[128];
   scanf("%s", nomeDoArquivoDeIndice);
   Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_NOVO);
-  if(indice == NULL || getStatusIndice(indice) == '0'){
+  if(indice == NULL){
     printf("Falha no processamento do arquivo\n");
+    closeHeaderEBinario(&header, &binario);
     return;
   }
 
@@ -345,8 +346,8 @@ void criaIndiceParaBinExistente(){
   //lê os registros e guarda no arquivo de indice
   for (int i = 0; i < rrnMaximo; i++){
     baby = readRegistros(binario, i);
-    //if (baby != NULL) inserir(indice, i, baby->idNascimento);
-    printBaby(baby);
+    if (baby != NULL) inserir(indice, i, baby->idNascimento);
+    //printBaby(baby);
     destroyBaby(&baby);
   }
 
@@ -364,7 +365,7 @@ void pesquisaIndice(){
 
   // caso não existam registros no arquivo
   if (rrnMaximo == 0){
-    printf("Registro Inexistente.");
+    printf("Registro inexistente.");
     closeHeaderEBinario(&header, &binario);
     return;
   }
@@ -391,7 +392,7 @@ void pesquisaIndice(){
 
   //printf("RRN encontrado: %d, RRN máximo dados: %d\n", rrn, header->RRNproxRegistro);
 
-  if (rrn > header->RRNproxRegistro || rrn == -1) printf("Registro Inexistente");
+  if (rrn > header->RRNproxRegistro || rrn == -1) printf("Registro inexistente");
   else if (rrn != -1){
     baby = readRegistros(binario, rrn);
     // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
@@ -399,7 +400,7 @@ void pesquisaIndice(){
       printBaby(baby);
       //printBabyFull(baby);
       printf("Quantidade de paginas da arvore-B acessadas: %d\n", *count);
-    } else if (baby == NULL) printf("Registro Inexistente");
+    } else if (baby == NULL) printf("Registro inexistente");
     destroyBaby(&baby);
   }
   
@@ -449,6 +450,10 @@ int main(){
 
     case 9:
       pesquisaIndice();
+      break;
+
+    case 10:
+      criaIndiceParaBinExistente();
       break;
 
   }  

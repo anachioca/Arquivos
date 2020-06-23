@@ -1,11 +1,11 @@
 all: prog
 
 run: prog
-	./prog
+	./prog < 1.in
 	
 valgrind: prog
 	gcc -o prog -g -Wall -ggdb3 *.o -g
-	valgrind --leak-check=full --show-leak-kinds=all ./prog <"Casos Abertos"/9.in
+	valgrind --leak-check=full --show-leak-kinds=all ./prog < 1.in
 
 prog: baby.o binManager.o indiceManager.o main.o
 	gcc -o prog -g -Wall -ggdb3 *.o -g
