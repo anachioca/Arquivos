@@ -5,6 +5,10 @@
 #include "indiceManager.h"
 #include "baby.h"
 
+#define bool int
+#define TRUE 1
+#define FALSE 0
+
 #define ORDEM 6
 #define MAX_CHAVES 5
 
@@ -14,6 +18,11 @@
 
 #define TAM_PAGINA 72
 #define TAM_CABECALHO 72
+
+#define IS_PROMOTION int
+#define PROMOTION 1
+#define NO_PROMOTION 2
+#define ERROR 3
 
 typedef struct Indice_{
     char status;
@@ -352,7 +361,7 @@ void inserir(Indice * indice, int rrn, int chave){
 
     Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
 
-    if(pagina->numeroDeChaves < 5){ // se ainda tem espaço no nó, insere a chave
+    if(pagina->numeroDeChaves < MAX_CHAVES){ // se ainda tem espaço no nó, insere a chave
         // procurar a posição exata dentro da página:
         buscaPelaPosicaoNaPagina(pagina, chave, &(posicaoDoRegistro->posicaoNaPagina));
         RegistroBaby * registroBaby = criaRegistroBaby(chave, rrn);
@@ -369,3 +378,104 @@ void inserir(Indice * indice, int rrn, int chave){
     free(posicaoDoRegistro);
     free(count);
 }
+
+bool paginaTemEspaco(Pagina * pagina){
+    return pagina -> numeroDeChaves < MAX_CHAVES;
+}
+
+void insereChaveNaPagina(Pagina * pagina,int pBKey,int pBRrn){
+    int nroChaves = pagina -> numeroDeChaves;
+    pagina -> chaves[nroChaves].chave = pBKey;
+    pagina -> chaves[nroChaves].rrn = pBRrn;
+    pagina -> nivel = nivel;
+    pagina -> numeroDeChaves++;
+
+    indice -> noRaiz = 0;
+    indice -> proxRRN = 1;
+    indice -> nroChaves = 1;
+}
+
+void swap(RegistroBaby *xp, RegistroBaby *yp) { 
+    RegistroBaby temp = *xp; 
+    *xp = *yp; 
+    *yp = temp; 
+} 
+
+void bubbleSort(RegistroBaby arr[], int n) { 
+   int i, j; 
+   for (i = 0; i < n-1; i++)       
+  
+       // Last i elements are already in place    
+       for (j = 0; j < n-i-1; j++)  
+           if (arr[j].chave > arr[j+1].chave) 
+              swap(&arr[j], &arr[j+1]); 
+} 
+
+void split(Indice * indice, int pBKey, int pBrrn, Pagina * pagina,
+    RegistroBaby * chavePromovida, int * filhoDaChavePromovida,
+    Pagina * novaPagina, RegistroBaby chaveInserida){
+
+    RegistroBaby elementos[6];
+    for (int i = 0; i < MAX_CHAVES; i++){
+        elementos[i] = pagina->chaves[i];
+    }
+    elementos[5] = chaveInserida;
+    bubbleSort(elementos, MAX_CHAVES + 1);
+
+    for (int i = 0; i < (MAX_CHAVES+1)/2; i++){
+        pagina->chaves[i] = elementos[i];
+    }
+
+    novaPagina->chaves[0] = elementos[4];
+    novaPagina->chaves[1] = elementos[5];
+
+    *chavePromovida = elementos[3];
+
+}
+
+IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
+    RegistroBaby * chaveInserida, RegistroBaby * chavePromovida,
+    int * filhoDaChaveDeCima){
+    
+    Pagina * pagina;
+    int posicaoNaPagina;
+    IS_PROMOTION retorno;
+    Pagina * novaPagina;
+    int pBKey;
+    int pBRrn;
+
+    if(rrnPaginaAtual == RRN_PAGINA_VAZIA){
+        *chavePromovida = chaveInserida;
+        *filhoDaChaveDeCima = -1;
+        return PROMOTION;
+    }
+    else{
+        pagina = carregaPagina(indice, rrnPaginaAtual);
+        buscaPelaPosicaoNaPagina(pagina, chaveInserida, &posicaoNaPagina);
+        if(pagina -> chaves[posicaoNaPagina].chave == chaveInserida){
+            printf("Chave já foi inserida!\n");
+            return ERROR;
+        }
+
+        retorno = _insercao(indice, pagina -> descendentes[posicaoNaPagina],
+            chaveInserida, &pBKey, &pBRrn);
+
+        if(retorno == NO_PROMOTION || retorno == ERROR)
+            return retorno;
+
+        else if(paginaTemEspaco(pagina)){
+            insereChaveNaPagina(pagina, pBKey, pBRrn);
+            return NO_PROMOTION;
+        }
+        else{
+            novaPagina = initPagina();
+            split(indice, pBKey, pBRrn, pagina, 
+                chavePromovida, filhoDaChaveDeCima, novaPagina, chaveInserida);
+
+            salvaPagina(indice, &pagina, rrnPaginaAtual);
+            salvaPagina(indice, novaPagina, filhoDaChaveDeCima);
+            return PROMOTION;
+        }
+    }
+}
+
