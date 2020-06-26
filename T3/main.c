@@ -409,6 +409,10 @@ void pesquisaIndice(){
   closeIndice(&indice);
 }
 
+void incluiNoIndice(){
+
+}
+
 int main(){
 
   int opcao;
@@ -453,7 +457,7 @@ int main(){
       break;
 
     case 10:
-      criaIndiceParaBinExistente();
+      incluiNoIndice();
       break;
 
   }  

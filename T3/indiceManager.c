@@ -332,6 +332,43 @@ void insereChaveSemOverflow(Indice * indice, int rrn, int chave, int nivel){
     indice -> nroChaves = 1;
 }
 
+bool paginaPossuiDescendentes(Pagina * pagina){
+    if (pagina -> descendentes[0] != -1) return 1;
+    else return 0;
+}
+
+int maximo(int niveis[]){
+    int max = niveis[0];
+    for (int i = 1; i < MAX_CHAVES + 1; i++){
+        if (niveis[i] > max) max = niveis[i];
+    }
+    return max;
+}
+
+// arruma os níveis de toda a árvore
+void setNiveis(Indice * indice){
+    Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
+    _setNiveis(indice, paginaRaiz);
+}
+
+int _setNiveis(Indice * indice, Pagina * pagina){
+    if (!paginaPossuiDescendentes(pagina)) {
+        pagina -> nivel = 0; // nó folha
+        return pagina -> nivel;
+    }    
+
+    int niveis[6];
+    for (int i = 0; i < MAX_CHAVES + 1; i++){
+        if (pagina -> descendentes[i] != -1){
+            Pagina * proxPagina = carregaPagina(indice, pagina->descendentes[i]);
+            niveis[i] = _setNiveis(indice, proxPagina);
+        }
+    }
+
+    pagina->nivel = maximo(niveis);
+    return pagina -> nivel;
+}
+
 // insere um novo registroBaby ao arquivo de indice
 void inserir(Indice * indice, int rrn, int chave){
     if(indice->nroChaves == 0){
@@ -382,11 +419,11 @@ bool paginaTemEspaco(Pagina * pagina){
     return pagina -> numeroDeChaves < MAX_CHAVES;
 }
 
-void insereChaveNaPagina(Pagina * pagina,int pBKey,int pBRrn){
+void insereChaveNaPagina(Indice * indice, Pagina * pagina,int pBKey,int pBRrn){
     int nroChaves = pagina -> numeroDeChaves;
     pagina -> chaves[nroChaves] -> chave = pBKey;
     pagina -> chaves[nroChaves] -> rrn = pBRrn;
-    pagina -> nivel = nivel;
+    //pagina -> nivel = nivel;
     pagina -> numeroDeChaves++;
 
     indice -> noRaiz = 0;
@@ -463,7 +500,7 @@ IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
             return retorno;
 
         else if(paginaTemEspaco(pagina)){
-            insereChaveNaPagina(pagina, pBKey, pBRrn);
+            insereChaveNaPagina(indice, pagina, pBKey, pBRrn);
             return NO_PROMOTION;
         }
         else{
