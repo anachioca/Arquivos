@@ -447,22 +447,49 @@ void bubbleSort(RegistroBaby arr[], int n) {
               swap(&arr[j], &arr[j+1]); 
 } 
 
-void split(Indice * indice, RegistroBaby * pBKey, int pBRrn, Pagina * pagina,
+int * ordenaDescendentes(int children[], RegistroBaby elementos[], RegistroBaby * key){
+    int i;
+    for (i = 0; i < MAX_CHAVES + 1; i++){
+        if (elementos[i].chave == key->chave) break;
+    }
+    int child = children[MAX_CHAVES+1];
+    int children_new[MAX_CHAVES + 2];
+    for (int j = 0; j < MAX_CHAVES + 2; j++){
+        if (j != i) children_new[j] = children[j];
+        else if (j == i){
+            children_new[j] = child;
+            j++;
+        }
+    }
+    return children_new;
+}
+
+void split(Indice * indice, RegistroBaby * key, int i_rrn, Pagina * pagina,
     RegistroBaby * chavePromovida, int * filhoDaChavePromovida,
     Pagina * novaPagina){
 
     RegistroBaby * elementos[MAX_CHAVES + 1];
+    int children[MAX_CHAVES + 2];
     for (int i = 0; i < MAX_CHAVES; i++){
         elementos[i] = pagina->chaves[i];
+        children[i] = pagina->descendentes[i];
     }
-    elementos[MAX_CHAVES] = pBKey;
+    children[MAX_CHAVES + 1] = i_rrn;
+    elementos[MAX_CHAVES] = key;
     bubbleSort(elementos, MAX_CHAVES + 1);
+    int children_new[MAX_CHAVES+2] = ordenaDescendentes(children, elementos, key);
 
     for (int i = 0; i < (MAX_CHAVES+1)/2; i++)
         pagina -> chaves[i] = elementos[i];
 
     for(int i = ((MAX_CHAVES+1)/2) + 1; i < MAX_CHAVES + 1; i++)
         novaPagina -> chaves[i] = elementos[i];
+
+    for (int i = 0; i < (MAX_CHAVES+2)/2; i++)
+        pagina -> descendentes[i] = children_new[i];
+
+    for(int i = ((MAX_CHAVES+2)/2) + 1; i < MAX_CHAVES + 1; i++)
+        novaPagina -> descendentes[i] = children_new[i];
     
     chavePromovida = elementos[(MAX_CHAVES + 1) / 2];
     *filhoDaChavePromovida = indice -> proxRRN;
@@ -507,6 +534,10 @@ IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
             novaPagina = initPagina();
             split(indice, pBKey, pBRrn, pagina, chavePromovida,
             filhoDaChaveDeCima, novaPagina);
+
+            if (rrnPaginaAtual == indice->noRaiz){
+                //particionou o nó raiz, então agora tem um novo nó raiz aaaaa????
+            }
 
             salvaPagina(indice, &pagina, rrnPaginaAtual);
             salvaPagina(indice, novaPagina, filhoDaChaveDeCima);
