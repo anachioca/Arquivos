@@ -345,12 +345,6 @@ int maximo(int niveis[]){
     return max;
 }
 
-// arruma os níveis de toda a árvore
-void setNiveis(Indice * indice){
-    Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
-    _setNiveis(indice, paginaRaiz);
-}
-
 int _setNiveis(Indice * indice, Pagina * pagina){
     if (!paginaPossuiDescendentes(pagina)) {
         pagina -> nivel = 0; // nó folha
@@ -367,6 +361,12 @@ int _setNiveis(Indice * indice, Pagina * pagina){
 
     pagina->nivel = maximo(niveis);
     return pagina -> nivel;
+}
+
+// arruma os níveis de toda a árvore
+void setNiveis(Indice * indice){
+    Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
+    _setNiveis(indice, paginaRaiz);
 }
 
 // insere um novo registroBaby ao arquivo de indice
