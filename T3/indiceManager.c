@@ -419,34 +419,6 @@ bool paginaTemEspaco(Pagina * pagina){
     return pagina -> numeroDeChaves < MAX_CHAVES;
 }
 
-void insereChaveNaPagina(Indice * indice, Pagina * pagina,int pBKey,int pBRrn){
-    int nroChaves = pagina -> numeroDeChaves;
-    pagina -> chaves[nroChaves] -> chave = pBKey;
-    pagina -> chaves[nroChaves] -> rrn = pBRrn;
-    //pagina -> nivel = nivel;
-    pagina -> numeroDeChaves++;
-
-    indice -> noRaiz = 0;
-    indice -> proxRRN = 1;
-    indice -> nroChaves = 1;
-}
-
-void swap(RegistroBaby *xp, RegistroBaby *yp) { 
-    RegistroBaby temp = *xp; 
-    *xp = *yp; 
-    *yp = temp; 
-} 
-
-void bubbleSort(RegistroBaby arr[], int n) { 
-   int i, j; 
-   for (i = 0; i < n-1; i++)       
-  
-       // Last i elements are already in place    
-       for (j = 0; j < n-i-1; j++)  
-           if (arr[j].chave > arr[j+1].chave) 
-              swap(&arr[j], &arr[j+1]); 
-} 
-
 int * ordenaDescendentes(int children[], RegistroBaby elementos[], RegistroBaby * key){
     int i;
     for (i = 0; i < MAX_CHAVES + 1; i++){
@@ -464,18 +436,50 @@ int * ordenaDescendentes(int children[], RegistroBaby elementos[], RegistroBaby 
     return children_new;
 }
 
+void swap(RegistroBaby ** xp, RegistroBaby ** yp) { 
+    RegistroBaby * temp = *xp; 
+    *xp = *yp;
+    *yp = temp; 
+} 
+
+void bubbleSort(RegistroBaby * arr[], int n) { 
+   int i, j; 
+   for (i = 0; i < n-1; i++)       
+  
+       // Last i elements are already in place    
+       for (j = 0; j < n-i-1; j++)  
+           if (arr[j] -> chave > arr[j+1] -> chave) 
+              swap(&arr[j], &arr[j+1]); 
+} 
+
+void insereChaveNaPagina(Indice * indice, Pagina * pagina, RegistroBaby * 
+    chavePromovida, int rrnPromovido){
+    int nroChaves = pagina -> numeroDeChaves;
+    pagina -> chaves[nroChaves] = chavePromovida;
+    pagina -> descendentes[nroChaves + 1] = rrnPromovido;
+
+    bubbleSort(pagina->chaves, pagina->numeroDeChaves);
+    ordenaDescendentes(pagina->descendentes, pagina->chaves, chavePromovida->chave);
+    
+    pagina -> numeroDeChaves++;
+
+    indice -> noRaiz = 0;
+    indice -> proxRRN = 1;
+    indice -> nroChaves = 1;
+}
+
 void split(Indice * indice, RegistroBaby * key, int i_rrn, Pagina * pagina,
     RegistroBaby * chavePromovida, int * filhoDaChavePromovida,
     Pagina * novaPagina){
-
+        
     RegistroBaby * elementos[MAX_CHAVES + 1];
     int children[MAX_CHAVES + 2];
     for (int i = 0; i < MAX_CHAVES; i++){
         elementos[i] = pagina->chaves[i];
         children[i] = pagina->descendentes[i];
     }
-    children[MAX_CHAVES + 1] = i_rrn;
-    elementos[MAX_CHAVES] = key;
+    children[MAX_CHAVES + 1] = i_rrn; // i_rrn == filhochavepromovida
+    elementos[MAX_CHAVES] = key; // key == chave promovida
     bubbleSort(elementos, MAX_CHAVES + 1);
     int children_new[MAX_CHAVES+2] = ordenaDescendentes(children, elementos, key);
 
@@ -493,7 +497,25 @@ void split(Indice * indice, RegistroBaby * key, int i_rrn, Pagina * pagina,
     
     chavePromovida = elementos[(MAX_CHAVES + 1) / 2];
     *filhoDaChavePromovida = indice -> proxRRN;
+    indice -> proxRRN++;
 
+}
+
+void criaNovoNoRaiz(Indice * indice, int rrnPaginaEsquerda, int rrnPaginaDireita, 
+    RegistroBaby * chavePromovida){
+    
+    Pagina * novoNoRaiz = initPagina();
+    novoNoRaiz -> chaves[0] = chavePromovida;
+    novoNoRaiz -> descendentes[0] = rrnPaginaEsquerda;
+    novoNoRaiz -> descendentes[1] = rrnPaginaDireita;
+
+    indice -> noRaiz = indice -> proxRRN;
+    indice -> proxRRN++;
+
+    salvaPagina(indice, &novoNoRaiz, indice -> noRaiz);
+    destroyPagina(&novoNoRaiz);
+
+    return;
 }
 
 IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
@@ -504,8 +526,6 @@ IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
     int posicaoNaPagina;
     IS_PROMOTION retorno;
     Pagina * novaPagina;
-    RegistroBaby * pBKey;
-    int pBRrn;
 
     if(rrnPaginaAtual == RRN_PAGINA_VAZIA){
         chavePromovida = chaveInserida;
@@ -521,26 +541,33 @@ IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
         }
 
         retorno = _insercao(indice, pagina -> descendentes[posicaoNaPagina],
-            chaveInserida, pBKey, &pBRrn);
+            chaveInserida, chavePromovida, filhoDaChaveDeCima);
 
         if(retorno == NO_PROMOTION || retorno == ERROR)
             return retorno;
 
         else if(paginaTemEspaco(pagina)){
-            insereChaveNaPagina(indice, pagina, pBKey, pBRrn);
+            insereChaveNaPagina(indice, pagina, chavePromovida, filhoDaChaveDeCima);
+            salvaPagina(indice, &pagina, rrnPaginaAtual);
+            destroyPagina(&pagina);
             return NO_PROMOTION;
         }
         else{
             novaPagina = initPagina();
-            split(indice, pBKey, pBRrn, pagina, chavePromovida,
+            split(indice, chavePromovida, filhoDaChaveDeCima, pagina, chavePromovida,
             filhoDaChaveDeCima, novaPagina);
 
             if (rrnPaginaAtual == indice->noRaiz){
-                //particionou o nó raiz, então agora tem um novo nó raiz aaaaa????
+                criaNovoNoRaiz(indice, rrnPaginaAtual, chavePromovida
+                , filhoDaChaveDeCima);
             }
 
             salvaPagina(indice, &pagina, rrnPaginaAtual);
             salvaPagina(indice, novaPagina, filhoDaChaveDeCima);
+
+            destroyPagina(&pagina);
+            destroyPagina(&novaPagina);
+
             return PROMOTION;
         }
     }
