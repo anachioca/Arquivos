@@ -341,21 +341,26 @@ void criaIndiceParaBinExistente(){
   }
 
   int rrnMaximo = header->RRNproxRegistro;
+
+  printf("rrnMaximo = %d\n", rrnMaximo);
+
   Baby * baby;
 
   //lê os registros e guarda no arquivo de indice
-  for (int i = 0; i < rrnMaximo; i++){
+  for (int i = 0; i < 6; i++){
     baby = readRegistros(binario, i);
-    if (baby != NULL) inserir(indice, i, baby->idNascimento);
+    if (baby != NULL) inserir(indice, baby->idNascimento, i);
     //printBaby(baby);
     destroyBaby(&baby);
   }
 
   closeHeaderEBinario(&header, &binario);
   closeIndice(&indice);
+
+  binarioNaTela(nomeDoArquivoDeIndice);
 }
 
-void pesquisaIndice(){
+void pesquisaIndice_(){
   FILE * binario;
   Header * header;
   if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
@@ -388,7 +393,7 @@ void pesquisaIndice(){
   scanf("%s %d", campo, &valor);
   int * count = malloc(sizeof(int));
   *count = 0;
-  int rrn = pesquisaIndice_(indice, valor, count); // rrn do registro no arquivo de dados
+  int rrn = pesquisaIndice(indice, valor, count); // rrn do registro no arquivo de dados
 
   //printf("RRN encontrado: %d, RRN máximo dados: %d\n", rrn, header->RRNproxRegistro);
 
@@ -453,7 +458,7 @@ int main(){
       break;
 
     case 9:
-      pesquisaIndice();
+      pesquisaIndice_();
       break;
 
     case 10:

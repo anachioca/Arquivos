@@ -24,6 +24,9 @@
 #define NO_PROMOTION 2
 #define ERROR 3
 
+#define SUCESSO 1
+#define ERRO 0
+
 typedef struct Indice_{
     char status;
     int noRaiz;
@@ -35,7 +38,7 @@ typedef struct Indice_{
 
 // dupla que representa um baby no arquivo de indice
 typedef struct RegistroBaby_{
-    int chave; // era pra ser char aaaaaaa !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    int chave;
     int rrn; // rrn do baby no arquivo de dados
 } RegistroBaby;
 
@@ -54,6 +57,12 @@ typedef struct PosicaoDoRegistro_{
 
 void salvaIndice(Indice * indice);
 
+RegistroBaby * initRegistroBaby();
+
+void destroyRegistroBaby(RegistroBaby ** RB);
+
+void printChave(RegistroBaby * registroBaby, int i);
+
 Indice * initIndice(char * nomeDoBinario, MODO_DE_ABERTURA modo){
 	Indice * indice = malloc(sizeof(Indice));
     indice -> arquivoDeIndice = fopen(nomeDoBinario, modo);
@@ -68,12 +77,15 @@ Indice * initIndice(char * nomeDoBinario, MODO_DE_ABERTURA modo){
         indice -> proxRRN = 0;
         indice -> nroChaves = 0;
     } else if (!strcmp(modo, ARQUIVO_EXISTENTE)){
-        fseek(indice->arquivoDeIndice, 0, SEEK_SET);
-        fread(&indice->status, sizeof(char), 1, indice->arquivoDeIndice);
-        fread(&indice->noRaiz, sizeof(int), 1, indice->arquivoDeIndice);
-        fread(&indice->nroNiveis, sizeof(int), 1, indice->arquivoDeIndice);
-        fread(&indice->proxRRN, sizeof(int), 1, indice->arquivoDeIndice);
-        fread(&indice->nroChaves, sizeof(int), 1, indice->arquivoDeIndice);
+        if(ftell(indice -> arquivoDeIndice) != 0)
+            fseek(indice->arquivoDeIndice, 0, SEEK_SET);
+        else{
+            fread(&indice->status, sizeof(char), 1, indice->arquivoDeIndice);
+            fread(&indice->noRaiz, sizeof(int), 1, indice->arquivoDeIndice);
+            fread(&indice->nroNiveis, sizeof(int), 1, indice->arquivoDeIndice);
+            fread(&indice->proxRRN, sizeof(int), 1, indice->arquivoDeIndice);
+            fread(&indice->nroChaves, sizeof(int), 1, indice->arquivoDeIndice);
+        }
     }   
 
 	return indice;
@@ -128,10 +140,8 @@ Pagina * initPagina(){
     pagina = malloc(sizeof(Pagina));
     pagina -> numeroDeChaves = 0;
 
-    for(int i = 0; i < MAX_CHAVES; i++){
-        pagina -> chaves[i] -> chave = -1;
-        pagina -> chaves[i] -> rrn = -1;
-    }
+    for(int i = 0; i < MAX_CHAVES; i++)
+        pagina -> chaves[i] = NULL;
 
     for(int i = 0; i < MAX_CHAVES + 1; i++)
         pagina -> descendentes[i] = -1;
@@ -141,8 +151,21 @@ Pagina * initPagina(){
 
 void destroyPagina(Pagina ** pagina){
     if(*pagina == NULL) return;
+    for(int i = 0; i < (*pagina) -> numeroDeChaves; i++)
+        destroyRegistroBaby(&((*pagina) -> chaves[i]));
+
     free(*pagina);
     *pagina = NULL;
+    printf("Página destruída.\n");
+}
+
+RegistroBaby * initRegistroBaby(){
+    RegistroBaby * registroBaby = malloc(sizeof(RegistroBaby));
+    if(!registroBaby) return NULL;
+
+    registroBaby -> chave = -1;
+    registroBaby -> rrn = -1;
+    return registroBaby;
 }
 
 void destroyRegistroBaby(RegistroBaby ** RB){
@@ -152,9 +175,13 @@ void destroyRegistroBaby(RegistroBaby ** RB){
 }
 
 void carregaChave(Indice * indice, Pagina * pagina, int i){
-    //printf("%d ", i);
-    fread(&(pagina -> chaves[i] -> chave), sizeof(int), 1, indice -> arquivoDeIndice);
-    fread(&(pagina -> chaves[i] -> rrn), sizeof(int), 1, indice -> arquivoDeIndice);
+    RegistroBaby * registro = initRegistroBaby();
+
+    fread(&(registro -> chave), sizeof(int), 1, indice -> arquivoDeIndice);
+    fread(&(registro -> rrn), sizeof(int), 1, indice -> arquivoDeIndice);
+
+
+    pagina -> chaves[i] = (registro -> chave == -1 ? NULL : registro);
 }
 
 // escreve um RegistroBaby na página
@@ -165,23 +192,42 @@ void escreveChaveNaPagina(Pagina * pagina, int i, RegistroBaby * RegistroBaby){
 
 // escreve um RegistroBaby no arquivo de indice
 void salvaChave(Indice * indice, RegistroBaby * registroBaby){
-    fwrite(&(registroBaby -> chave), sizeof(int), 1, indice -> arquivoDeIndice);
-    fwrite(&(registroBaby -> rrn), sizeof(int), 1, indice -> arquivoDeIndice);
+    int chave;
+    int rrn;
+
+    if(!registroBaby){
+        chave = -1;
+        rrn = -1;
+    }
+    else{
+        chave = registroBaby -> chave;
+        rrn = registroBaby -> rrn;
+    }
+
+    fwrite(&chave, sizeof(int), 1, indice -> arquivoDeIndice);
+    fwrite(&rrn, sizeof(int), 1, indice -> arquivoDeIndice);
+}
+
+void printChave(RegistroBaby * registroBaby, int i){
+    printf("Chave %d: %d, %d\n", i, registroBaby -> chave, registroBaby -> rrn);
 }
 
 void printPagina(Pagina * pagina){
-    printf("\nNível: %d\n", pagina->nivel);
-    printf("Número de Chaves: %d\n", pagina->numeroDeChaves);
-    for (int i = 0; i < MAX_CHAVES; i++){
-        printf("Chave %d: %d, %d\n", i, pagina->chaves[i] -> chave, pagina->chaves[i] -> rrn);
-    }
-    for (int i = 0; i < MAX_CHAVES + 1; i++){
+
+    printf("Nível: %d\n", pagina -> nivel);
+    printf("Número de Chaves: %d\n", pagina -> numeroDeChaves);
+
+    for (int i = 0; i < pagina -> numeroDeChaves; i++)
+        printChave(pagina -> chaves[i], i);
+
+    for (int i = 0; i < MAX_CHAVES + 1; i++)
         printf("Descendente %d: %d\n", i, pagina->descendentes[i]);
-    }
 }
 
 // escreve no arquivo de indice uma página
 void salvaPagina(Indice * indice, Pagina ** pagina, int rrnPagina){
+    printf("Salvando página...\n");
+
     long posicaoInicial = ftell(indice -> arquivoDeIndice);
     long posicaoPagina = rrnPagina * TAM_PAGINA + TAM_CABECALHO;
     if(posicaoInicial != posicaoPagina);
@@ -197,6 +243,7 @@ void salvaPagina(Indice * indice, Pagina ** pagina, int rrnPagina){
         salvaChave(indice, (*pagina) -> chaves[i]);
 
     fwrite((*pagina) -> descendentes, sizeof(int), MAX_CHAVES + 1, indice -> arquivoDeIndice);
+    printf("Salvamento concluído...\n");
 }
 
 // função que traz uma página do arquivo de indice para a RAM
@@ -205,8 +252,10 @@ Pagina * carregaPagina(Indice * indice, int rrn){
     if(rrn == RRN_PAGINA_VAZIA)
         return NULL;
 
-    long posicao = ftell(indice -> arquivoDeIndice);
-    fseek(indice -> arquivoDeIndice, rrn * TAM_PAGINA + TAM_CABECALHO, SEEK_SET);
+    long posicaoInicial = ftell(indice -> arquivoDeIndice);
+    long posicaoPagina = rrn * TAM_PAGINA + TAM_CABECALHO;
+    if(posicaoInicial != posicaoPagina)
+        fseek(indice -> arquivoDeIndice, posicaoPagina, SEEK_SET);
 
     Pagina * pagina = initPagina();
 
@@ -214,11 +263,13 @@ Pagina * carregaPagina(Indice * indice, int rrn){
     fread(&(pagina -> numeroDeChaves), sizeof(int), 1, indice -> arquivoDeIndice);
     for(int i = 0; i < MAX_CHAVES; i++)
         carregaChave(indice, pagina, i);
+
     fread(&(pagina -> descendentes), sizeof(int), MAX_CHAVES + 1
         , indice -> arquivoDeIndice);
 
-    fseek(indice -> arquivoDeIndice, posicao, SEEK_SET);
+    fseek(indice -> arquivoDeIndice, posicaoInicial, SEEK_SET);
     //printPagina(pagina);
+    printf("Terminando de carregar página...\n");
 
     return pagina;
 }
@@ -234,11 +285,15 @@ int buscaPelaChaveNaPagina(Pagina * paginaDaChave, int chave, int * i){
     return NAO_ENCONTRADO;
 }
 
-void buscaPelaPosicaoNaPagina(Pagina * paginaDaChave, int chave, int * i){
-    for(*i = 0; *i < MAX_CHAVES; (*i)++){
-        if(paginaDaChave -> chaves[*i] -> chave >= chave)
+void buscaPelaPosicaoNaPagina(Pagina * paginaDaChave, int chaveInserida, int * i){
+    int chaveAtual;
+    for(*i = 0; *i < paginaDaChave -> numeroDeChaves; (*i)++){
+        chaveAtual = paginaDaChave -> chaves[*i] -> chave;
+        if(chaveInserida < chaveAtual)
             break;
     }
+    printf("Estou no fim da busca!\n");
+    printf("Posição encontrada = %d. Chave = %d\n", *i, chaveInserida);
     return;
 }
 
@@ -296,7 +351,7 @@ int getRRNIndice(Indice * indice, PosicaoDoRegistro * PR){
 
 // Pesquisa no arquivo de indice por uma chave
 // e retorna a posição do exata do registro no arquivo de indice
-int pesquisaIndice_(Indice * indice, int chave, int * count){
+int pesquisaIndice(Indice * indice, int chave, int * count){
     if (indice->noRaiz == -1) return -1;
     Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
     PosicaoDoRegistro * PR = pesquisaRecursiva(indice, indice->noRaiz, chave, paginaRaiz, -1, count);
@@ -369,65 +424,20 @@ void setNiveis(Indice * indice){
     _setNiveis(indice, paginaRaiz);
 }
 
-// insere um novo registroBaby ao arquivo de indice
-void inserir(Indice * indice, int rrn, int chave){
-    if(indice->nroChaves == 0){
-        Pagina * raiz = initPagina();
-        raiz -> chaves[0] -> chave = chave;
-        raiz -> chaves[0] -> rrn = rrn;
-        raiz -> nivel = 1;
-        raiz -> numeroDeChaves = 1;
-
-        indice -> noRaiz = 0;
-        indice -> nroNiveis = 1;
-        indice -> proxRRN = 1;
-        indice -> nroChaves = 1;
-
-        salvaPagina(indice, &raiz, 0);
-        free(raiz);
-        return;
-    }
-
-    int * count = malloc(sizeof(int));
-    *count = 0;
-    
-    PosicaoDoRegistro * posicaoDoRegistro = pesquisaRecursiva(
-        indice, indice->noRaiz, chave, carregaPagina(indice, indice->noRaiz)
-        , -1, count);
-
-    Pagina * pagina = carregaPagina(indice, posicaoDoRegistro -> rrnPagina);
-
-    if(pagina->numeroDeChaves < MAX_CHAVES){ // se ainda tem espaço no nó, insere a chave
-        // procurar a posição exata dentro da página:
-        buscaPelaPosicaoNaPagina(pagina, chave, &(posicaoDoRegistro->posicaoNaPagina));
-        RegistroBaby * registroBaby = criaRegistroBaby(chave, rrn);
-        escreveChaveNaPagina(pagina, posicaoDoRegistro -> posicaoNaPagina, registroBaby);
-        pagina->numeroDeChaves++;
-        salvaPagina(indice, &pagina, posicaoDoRegistro -> rrnPagina);
-        destroyRegistroBaby(&registroBaby);
-    }
-    else {
-        // spliiiit e promotion
-    }
-    
-    free(pagina);
-    free(posicaoDoRegistro);
-    free(count);
-}
-
 bool paginaTemEspaco(Pagina * pagina){
     return pagina -> numeroDeChaves < MAX_CHAVES;
 }
 
-int * ordenaDescendentes(int children[], RegistroBaby elementos[], RegistroBaby * key){
+int * ordenaDescendentes(int children[], RegistroBaby * elementos[], int chave){
     int i;
     for (i = 0; i < MAX_CHAVES + 1; i++){
-        if (elementos[i].chave == key->chave) break;
+        if (elementos[i] -> chave == chave) break;
     }
     int child = children[MAX_CHAVES+1];
-    int children_new[MAX_CHAVES + 2];
+    int * children_new = malloc(sizeof(int) * (MAX_CHAVES + 2));
     for (int j = 0; j < MAX_CHAVES + 2; j++){
-        if (j != i) children_new[j] = children[j];
+        if (j != i)
+            children_new[j] = children[j];
         else if (j == i){
             children_new[j] = child;
             j++;
@@ -436,11 +446,17 @@ int * ordenaDescendentes(int children[], RegistroBaby elementos[], RegistroBaby 
     return children_new;
 }
 
-void swap(RegistroBaby ** xp, RegistroBaby ** yp) { 
+void swapRegistros(RegistroBaby ** xp, RegistroBaby ** yp) { 
     RegistroBaby * temp = *xp; 
     *xp = *yp;
     *yp = temp; 
-} 
+}
+
+void swapInt(int * a, int * b){
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
 
 void bubbleSort(RegistroBaby * arr[], int n) { 
    int i, j; 
@@ -449,28 +465,43 @@ void bubbleSort(RegistroBaby * arr[], int n) {
        // Last i elements are already in place    
        for (j = 0; j < n-i-1; j++)  
            if (arr[j] -> chave > arr[j+1] -> chave) 
-              swap(&arr[j], &arr[j+1]); 
+              swapRegistros(&arr[j], &arr[j+1]); 
 } 
 
-void insereChaveNaPagina(Indice * indice, Pagina * pagina, RegistroBaby * 
-    chavePromovida, int rrnPromovido){
-    int nroChaves = pagina -> numeroDeChaves;
-    pagina -> chaves[nroChaves] = chavePromovida;
-    pagina -> descendentes[nroChaves + 1] = rrnPromovido;
-
-    bubbleSort(pagina->chaves, pagina->numeroDeChaves);
-    ordenaDescendentes(pagina->descendentes, pagina->chaves, chavePromovida->chave);
-    
-    pagina -> numeroDeChaves++;
-
-    indice -> noRaiz = 0;
-    indice -> proxRRN = 1;
-    indice -> nroChaves = 1;
+void shiftaChavesEDescendentes(Pagina * pagina, int posicaoASerInserida){
+    for(int i = pagina -> numeroDeChaves; i > posicaoASerInserida; i--){
+        swapRegistros(&(pagina -> chaves[i]), &(pagina -> chaves[i-1]));
+        swapInt(&(pagina -> descendentes[i+1]), &(pagina -> descendentes[i]));
+    }
 }
 
-void split(Indice * indice, RegistroBaby * key, int i_rrn, Pagina * pagina,
-    RegistroBaby * chavePromovida, int * filhoDaChavePromovida,
-    Pagina * novaPagina){
+int insereOrdenadoChaveNaPagina(Indice * indice, Pagina * pagina, RegistroBaby * 
+    chavePromovida, int rrnPromovido){
+
+    printf("\n\nEssa página possui %d chaves. Máximo: %d\n\n", pagina -> numeroDeChaves, MAX_CHAVES);
+    printPagina(pagina);
+    if(!paginaTemEspaco(pagina)) return ERRO;
+    
+    int posicaoASerInserida;
+    buscaPelaPosicaoNaPagina(pagina, chavePromovida -> chave, &posicaoASerInserida);
+    shiftaChavesEDescendentes(pagina, posicaoASerInserida);
+
+    printf("Chave promovida = %d\n", chavePromovida -> chave);
+
+    pagina -> chaves[posicaoASerInserida] = chavePromovida;
+    pagina -> descendentes[posicaoASerInserida + 1] = rrnPromovido;
+
+    pagina -> numeroDeChaves++;
+
+    printf("Terminei de inserir ordenado. Aqui está a página:\n");
+    printPagina(pagina);
+
+}
+
+void split(Indice * indice, Pagina * pagina, RegistroBaby * chavePromovida
+    , int * filhoDaChavePromovida, Pagina * novaPagina){
+
+    printf("\n\nESTOU SPLITANDO!\n\n");
         
     RegistroBaby * elementos[MAX_CHAVES + 1];
     int children[MAX_CHAVES + 2];
@@ -478,10 +509,10 @@ void split(Indice * indice, RegistroBaby * key, int i_rrn, Pagina * pagina,
         elementos[i] = pagina->chaves[i];
         children[i] = pagina->descendentes[i];
     }
-    children[MAX_CHAVES + 1] = i_rrn; // i_rrn == filhochavepromovida
-    elementos[MAX_CHAVES] = key; // key == chave promovida
+    children[MAX_CHAVES + 1] = *filhoDaChavePromovida; // i_rrn == filhochavepromovida
+    elementos[MAX_CHAVES] = chavePromovida; // key == chave promovida
     bubbleSort(elementos, MAX_CHAVES + 1);
-    int children_new[MAX_CHAVES+2] = ordenaDescendentes(children, elementos, key);
+    int * children_new = ordenaDescendentes(children, elementos, chavePromovida -> chave);
 
     for (int i = 0; i < (MAX_CHAVES+1)/2; i++)
         pagina -> chaves[i] = elementos[i];
@@ -498,16 +529,18 @@ void split(Indice * indice, RegistroBaby * key, int i_rrn, Pagina * pagina,
     chavePromovida = elementos[(MAX_CHAVES + 1) / 2];
     *filhoDaChavePromovida = indice -> proxRRN;
     indice -> proxRRN++;
+    free(children_new);
 
 }
 
 void criaNovoNoRaiz(Indice * indice, int rrnPaginaEsquerda, int rrnPaginaDireita, 
     RegistroBaby * chavePromovida){
-    
+
     Pagina * novoNoRaiz = initPagina();
     novoNoRaiz -> chaves[0] = chavePromovida;
     novoNoRaiz -> descendentes[0] = rrnPaginaEsquerda;
     novoNoRaiz -> descendentes[1] = rrnPaginaDireita;
+    novoNoRaiz -> numeroDeChaves++;
 
     indice -> noRaiz = indice -> proxRRN;
     indice -> proxRRN++;
@@ -518,7 +551,8 @@ void criaNovoNoRaiz(Indice * indice, int rrnPaginaEsquerda, int rrnPaginaDireita
     return;
 }
 
-IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
+
+IS_PROMOTION insercaoRecursiva(Indice * indice, int rrnPaginaAtual,
     RegistroBaby * chaveInserida, RegistroBaby * chavePromovida,
     int * filhoDaChaveDeCima){
     
@@ -528,42 +562,51 @@ IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
     Pagina * novaPagina;
 
     if(rrnPaginaAtual == RRN_PAGINA_VAZIA){
-        chavePromovida = chaveInserida;
+        printf("Chave inserida: %d\n", chaveInserida -> chave);
+        chavePromovida -> chave = chaveInserida -> chave;
+        chavePromovida -> rrn = chaveInserida -> rrn;
         *filhoDaChaveDeCima = -1;
+        printf("Chegou numa página vazia!\n");
         return PROMOTION;
     }
     else{
         pagina = carregaPagina(indice, rrnPaginaAtual);
+        printPagina(pagina);
         buscaPelaPosicaoNaPagina(pagina, chaveInserida -> chave, &posicaoNaPagina);
-        if(pagina -> chaves[posicaoNaPagina] -> chave == chaveInserida){
+        if(pagina -> chaves[posicaoNaPagina - 1] -> chave == chaveInserida -> chave){
             printf("Chave já foi inserida!\n");
             return ERROR;
         }
 
-        retorno = _insercao(indice, pagina -> descendentes[posicaoNaPagina],
+        printf("Acabou a busca dentro da página!\n");
+
+        retorno = insercaoRecursiva(indice, pagina -> descendentes[posicaoNaPagina],
             chaveInserida, chavePromovida, filhoDaChaveDeCima);
+        printf("Voltando na recursão...\n");
+        printf("Chave promovida = %d\n", chavePromovida -> chave);
 
         if(retorno == NO_PROMOTION || retorno == ERROR)
             return retorno;
 
+
         else if(paginaTemEspaco(pagina)){
-            insereChaveNaPagina(indice, pagina, chavePromovida, filhoDaChaveDeCima);
+            insereOrdenadoChaveNaPagina(indice, pagina, chavePromovida
+            , *filhoDaChaveDeCima);
             salvaPagina(indice, &pagina, rrnPaginaAtual);
             destroyPagina(&pagina);
             return NO_PROMOTION;
         }
         else{
             novaPagina = initPagina();
-            split(indice, chavePromovida, filhoDaChaveDeCima, pagina, chavePromovida,
-            filhoDaChaveDeCima, novaPagina);
+            split(indice, pagina, chavePromovida, filhoDaChaveDeCima, novaPagina);
 
             if (rrnPaginaAtual == indice->noRaiz){
-                criaNovoNoRaiz(indice, rrnPaginaAtual, chavePromovida
-                , filhoDaChaveDeCima);
+                criaNovoNoRaiz(indice, rrnPaginaAtual, *filhoDaChaveDeCima
+                , chavePromovida);
             }
 
             salvaPagina(indice, &pagina, rrnPaginaAtual);
-            salvaPagina(indice, novaPagina, filhoDaChaveDeCima);
+            salvaPagina(indice, &novaPagina, *filhoDaChaveDeCima);
 
             destroyPagina(&pagina);
             destroyPagina(&novaPagina);
@@ -573,3 +616,30 @@ IS_PROMOTION _insercao(Indice * indice, int rrnPaginaAtual,
     }
 }
 
+RegistroBaby * initRegistroBaby2(){
+    return initRegistroBaby();
+}
+
+void inserir(Indice * indice, int chave, int rrnNoBinario){
+    if(chave > 15) return;
+    RegistroBaby * chaveInserida = initRegistroBaby2();
+    chaveInserida -> chave = chave;
+    chaveInserida -> rrn = rrnNoBinario;
+
+    RegistroBaby * chavePromovida = initRegistroBaby();
+    int filhoDaChaveDeCima;
+
+    printf("Estou inserindo um novo nó...\n");
+
+    if(indice -> noRaiz == -1)
+        criaNovoNoRaiz(indice, -1, -1, chaveInserida);
+
+    else{
+        printf("Inserção recursiva vai começar...\n");
+        insercaoRecursiva(indice, indice -> noRaiz, chaveInserida, chavePromovida,
+        &filhoDaChaveDeCima);
+    }
+
+    // destroyRegistroBaby(&chaveInserida);
+    // destroyRegistroBaby(&chavePromovida);
+}
