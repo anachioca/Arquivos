@@ -347,10 +347,11 @@ void criaIndiceParaBinExistente(){
   Baby * baby;
 
   //lê os registros e guarda no arquivo de indice
-  for (int i = 0; i < 30; i++){
+  for (int i = 0; i < rrnMaximo; i++){
     baby = readRegistros(binario, i);
-    //printf("\n\nCHAVE %d\n\n", i+1);
+    //printf("\nCHAVE %d\n", i+1);
     if (baby != NULL) inserir(indice, baby->idNascimento, i);
+    if (baby == NULL) printf("NULL BABY???\n");
     //printBaby(baby);
     destroyBaby(&baby);
   }
@@ -423,7 +424,7 @@ void incluiNoIndice(){
 
   char nomeDoArquivoDeIndice[128];
   scanf("%s", nomeDoArquivoDeIndice);
-  Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_NOVO);
+  Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_EXISTENTE);
 
   if(indice == NULL){
     printf("Falha no processamento do arquivo\n");
@@ -445,6 +446,8 @@ void incluiNoIndice(){
     // insere no arquivo de indice
     inserir(indice, baby->idNascimento, header -> RRNproxRegistro);
 
+    
+
     updateHeader(header, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
     destroyBaby(&baby);
   }
@@ -453,6 +456,30 @@ void incluiNoIndice(){
   closeIndice(&indice);
 
   binarioNaTela(nomeDoArquivoDeIndice);
+}
+
+void imprimeArvoreB(){
+  char nomeDoArquivoDeIndice[128];
+  scanf("%s", nomeDoArquivoDeIndice);
+  Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_EXISTENTE);
+  Pagina * pagina;
+
+  if(indice == NULL || getStatusIndice(indice) == '0'){
+    printf("Falha no processamento do arquivo.");
+    closeIndice(&indice);
+    return;
+  }
+
+  printHeaderIndice(indice);
+
+  for (int i = 0; i < getProxRRN(indice) ; i++){
+    printf("\nPágina de RRN %d\n", i);
+    pagina = carregaPagina(indice, i);
+    printPagina(pagina);
+    destroyPagina(&pagina);
+  }
+
+  closeIndice(&indice);
 }
 
 int main(){
@@ -502,8 +529,11 @@ int main(){
       incluiNoIndice();
       break;
 
+    case 11:
+      imprimeArvoreB();
+      break;  
+
   }  
-  // < "Casos Abertos"/2.in
 
   return 0;
 }

@@ -2,6 +2,9 @@ all: prog
 
 run: prog
 	./prog 
+
+run2: prog
+	./prog < "Casos Abertos"/2.in
 	
 valgrind: prog
 	gcc -o prog -g -Wall -ggdb3 *.o -g

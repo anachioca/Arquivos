@@ -10,14 +10,25 @@
 #define ARQUIVO_NOVO "wb+"
 
 typedef struct Indice_ Indice;
+typedef struct Pagina_ Pagina;
 
 Indice * initIndice(char * nomeDoBinario, MODO_DE_ABERTURA modo);
 
+void printHeaderIndice(Indice * indice);
+
 void closeIndice(Indice ** indice);
+
+void destroyPagina(Pagina ** pagina);
 
 char getStatusIndice(Indice * indice);
 
 int getNoRaiz(Indice * indice);
+
+int getProxRRN(Indice * indice);
+
+void printPagina(Pagina * pagina);
+
+Pagina * carregaPagina(Indice * indice, int rrn);
 
 void inserir(Indice * indice, int rrn, int chave);
 
