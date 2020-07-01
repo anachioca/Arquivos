@@ -342,13 +342,14 @@ void criaIndiceParaBinExistente(){
 
   int rrnMaximo = header->RRNproxRegistro;
 
-  printf("rrnMaximo = %d\n", rrnMaximo);
+  //printf("rrnMaximo = %d\n", rrnMaximo);
 
   Baby * baby;
 
   //lê os registros e guarda no arquivo de indice
-  for (int i = 0; i < 6; i++){
+  for (int i = 0; i < 30; i++){
     baby = readRegistros(binario, i);
+    //printf("\n\nCHAVE %d\n\n", i+1);
     if (baby != NULL) inserir(indice, baby->idNascimento, i);
     //printBaby(baby);
     destroyBaby(&baby);
@@ -415,7 +416,43 @@ void pesquisaIndice_(){
 }
 
 void incluiNoIndice(){
+  FILE * binario;
+  Header * header;
+  if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
+    return;
 
+  char nomeDoArquivoDeIndice[128];
+  scanf("%s", nomeDoArquivoDeIndice);
+  Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_NOVO);
+
+  if(indice == NULL){
+    printf("Falha no processamento do arquivo\n");
+    closeHeaderEBinario(&header, &binario);
+    return;
+  }
+
+  Baby * baby;
+  int numeroDeInsercoes;
+  scanf("%d", &numeroDeInsercoes);
+
+  for (int i = 0; i < numeroDeInsercoes; i++){
+    baby = readInputBaby(); // lê o input do teclado e coloca em uma struct Baby
+    fseek(binario, 0, SEEK_END); // vai até o fim do arquivo
+    
+    // insere no arquivo de dados
+    writeRegistros(header, binario, baby, -1); 
+
+    // insere no arquivo de indice
+    inserir(indice, baby->idNascimento, header -> RRNproxRegistro);
+
+    updateHeader(header, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
+    destroyBaby(&baby);
+  }
+
+  closeHeaderEBinario(&header, &binario);
+  closeIndice(&indice);
+
+  binarioNaTela(nomeDoArquivoDeIndice);
 }
 
 int main(){
@@ -466,6 +503,7 @@ int main(){
       break;
 
   }  
+  // < "Casos Abertos"/2.in
 
   return 0;
 }
