@@ -156,11 +156,11 @@ Pagina * initPagina(){
 
 void destroyPagina(Pagina ** pagina){
     if(*pagina == NULL) return;
-    printf("Número de chaves = %d\n", (*pagina) -> numeroDeChaves);
+    //printf("Número de chaves = %d\n", (*pagina) -> numeroDeChaves);
 
     for(int i = 0; i < (*pagina) -> numeroDeChaves; i++){
         destroyRegistroBaby(&((*pagina) -> chaves[i]));
-        printf("Destruí a chave\n");
+        //printf("Destruí a chave\n");
     }
 
     free(*pagina);
@@ -178,7 +178,7 @@ RegistroBaby * initRegistroBaby(){
 }
 
 void destroyRegistroBaby(RegistroBaby ** RB){
-    printf("Endereço = %p\n", *RB);
+    //printf("Endereço = %p\n", *RB);
     if(*RB == NULL) return;
     free(*RB);
     *RB = NULL;
@@ -417,34 +417,6 @@ int maximo(int niveis[], int n){
     return max;
 }
 
-int _setNiveis(Indice * indice, Pagina * pagina){
-    if (!paginaPossuiDescendentes(pagina)) {
-        pagina -> nivel = 0; // nó folha
-        return pagina -> nivel;
-    }    
-
-    int niveis[6];
-    for (int i = 0; i < MAX_CHAVES + 1; i++){
-        if (pagina -> descendentes[i] != -1){
-            Pagina * proxPagina = carregaPagina(indice, pagina->descendentes[i]);
-            niveis[i] = _setNiveis(indice, proxPagina);
-            printf("niveis[%d] = %d\n", i, niveis[i]);
-        }
-    }
-
-    pagina->nivel = maximo(niveis, pagina->numeroDeChaves) + 1;
-    printf("Nível: %d\n", pagina->nivel);
-    
-    return pagina -> nivel;
-}
-
-// arruma os níveis de toda a árvore
-void setNiveis(Indice * indice){
-    printf("setNiveis...");
-    Pagina * paginaRaiz = carregaPagina(indice, indice->noRaiz);
-    _setNiveis(indice, paginaRaiz);
-}
-
 bool paginaTemEspaco(Pagina * pagina){
     return pagina -> numeroDeChaves < MAX_CHAVES;
 }
@@ -547,9 +519,9 @@ RegistroBaby * split(Indice * indice, Pagina * paginaAntiga, RegistroBaby *
     for (i = MAX_CHAVES; chavePromovida->chave < elementos[i]->chave && i > 0; i--){
         elementos[i] = elementos[i-1];
         children[i+1] = children[i];
-        printf("chavePromovida -> chave = %d\n", chavePromovida -> chave);
-        printf("chavePromovida -> endereço = %p\n", chavePromovida);
-        printf("Shiftei\n");
+        // printf("chavePromovida -> chave = %d\n", chavePromovida -> chave);
+        // printf("chavePromovida -> endereço = %p\n", chavePromovida);
+        // printf("Shiftei\n");
     }
     elementos[i] = chavePromovida;
     children[i+1] = *filhoDaChavePromovida;
@@ -575,7 +547,7 @@ RegistroBaby * split(Indice * indice, Pagina * paginaAntiga, RegistroBaby *
     novaPagina -> numeroDeChaves = MIN_CHAVES;
     paginaAntiga -> numeroDeChaves = MIN_CHAVES + 1;
 
-    printf("Acabou o split\n");
+    // printf("Acabou o split\n");
 
     return elementos[(MAX_CHAVES+1)/2];
 }
@@ -597,7 +569,7 @@ void criaNovoNoRaiz(Indice * indice, int rrnPaginaEsquerda, int rrnPaginaDireita
 
     salvaPagina(indice, &novoNoRaiz, indice -> noRaiz);
 
-    printf("Vou destruir dentro da criaNovoNoRaiz\n");
+    // printf("Vou destruir dentro da criaNovoNoRaiz\n");
     destroyPagina(&novoNoRaiz);
 
     return;
@@ -641,7 +613,7 @@ RegistroBaby * insercaoRecursiva(Indice * indice, int rrnPaginaAtual,
             insereOrdenadoChaveNaPagina(indice, pagina, retorno
             , *filhoDaChaveDeCima);
             salvaPagina(indice, &pagina, rrnPaginaAtual);
-            printf("estou antes do paginatemespaço\n");
+            // printf("estou antes do paginatemespaço\n");
             destroyPagina(&pagina);
             
             return NULL;
@@ -656,7 +628,7 @@ RegistroBaby * insercaoRecursiva(Indice * indice, int rrnPaginaAtual,
                 criaNovoNoRaiz(indice, rrnPaginaAtual, *filhoDaChaveDeCima
                 , *chavePromovida, novaPagina->nivel);
 
-                printf("Criei novo nó raiz...\n");
+                // printf("Criei novo nó raiz...\n");
             }
 
             salvaPagina(indice, &pagina, rrnPaginaAtual);
@@ -680,7 +652,7 @@ void inserir(Indice * indice, int chave, int rrnNoBinario){
     RegistroBaby * chavePromovida;
     int filhoDaChaveDeCima;
 
-    printf("Estou inserindo um novo nó...\n");
+    // printf("Estou inserindo um novo nó...\n");
 
     if(indice -> noRaiz == -1){
         criaNovoNoRaiz(indice, -1, -1, chaveInserida, -1);
