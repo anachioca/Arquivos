@@ -349,7 +349,6 @@ void criaIndiceParaBinExistente(){
   //lê os registros e guarda no arquivo de indice
   for (int i = 0; i < rrnMaximo; i++){
     baby = readRegistros(binario, i);
-    //printf("\nCHAVE %d\n", i+1);
     if (baby != NULL) inserir(indice, baby->idNascimento, i);
     if (baby == NULL) printf("NULL BABY???\n");
     //printBaby(baby);

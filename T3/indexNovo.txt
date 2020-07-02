@@ -1,0 +1,22 @@
+
+status: 1
+noRaiz: 0
+nroNiveis: 0
+proxRRN: 1
+nroChaves: 2
+
+Página de RRN 0
+Endereço = 0x55a4fb04b970
+Endereço = 0x55a4fb04b970
+Endereço = 0x55a4fb04b970
+Nível: 1
+Número de Chaves: 2
+Chave 0: 1, 0
+Chave 1: 2, 1
+Descendente 0: -1
+Descendente 1: -1
+Descendente 2: -1
+Descendente 3: -1
+Descendente 4: -1
+Descendente 5: -1
+Número de chaves = 2

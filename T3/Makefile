@@ -1,7 +1,7 @@
 all: prog
 
 run: prog
-	./prog 
+	./prog
 
 run2: prog
 	./prog < "Casos Abertos"/2.in
