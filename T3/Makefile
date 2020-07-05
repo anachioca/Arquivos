@@ -1,11 +1,14 @@
 all: prog
 
 run: prog
-	./prog
+	./prog 
+
+run2: prog
+	./prog < 1.in
 	
 valgrind: prog
 	gcc -o prog -g -Wall -ggdb3 *.o -g
-	valgrind --leak-check=full --show-leak-kinds=all ./prog <"Casos Abertos"/9.in
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./prog < "Casos Abertos"/14.in
 
 prog: baby.o binManager.o indiceManager.o main.o
 	gcc -o prog -g -Wall -ggdb3 *.o -g
@@ -23,7 +26,7 @@ baby.o: baby.c
 	gcc -c baby.c
 
 clean: 
-	rm -rf *.o prog
+	rm -rf *.o prog trab.zip
 
 zip:
 	zip trab.zip *.c *.h Makefile

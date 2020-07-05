@@ -334,27 +334,34 @@ void criaIndiceParaBinExistente(){
   char nomeDoArquivoDeIndice[128];
   scanf("%s", nomeDoArquivoDeIndice);
   Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_NOVO);
-  if(indice == NULL || getStatusIndice(indice) == '0'){
+  if(indice == NULL){
     printf("Falha no processamento do arquivo\n");
+    closeHeaderEBinario(&header, &binario);
     return;
   }
 
   int rrnMaximo = header->RRNproxRegistro;
+
+  //printf("rrnMaximo = %d\n", rrnMaximo);
+
   Baby * baby;
 
   //lê os registros e guarda no arquivo de indice
   for (int i = 0; i < rrnMaximo; i++){
     baby = readRegistros(binario, i);
-    //if (baby != NULL) inserir(indice, i, baby->idNascimento);
-    printBaby(baby);
+    if (baby != NULL) inserir(indice, baby->idNascimento, i);
+    if (baby == NULL) printf("NULL BABY???\n");
+    //printBaby(baby);
     destroyBaby(&baby);
   }
 
   closeHeaderEBinario(&header, &binario);
   closeIndice(&indice);
+
+  binarioNaTela(nomeDoArquivoDeIndice);
 }
 
-void pesquisaIndice(){
+void pesquisaIndice_(){
   FILE * binario;
   Header * header;
   if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
@@ -364,7 +371,7 @@ void pesquisaIndice(){
 
   // caso não existam registros no arquivo
   if (rrnMaximo == 0){
-    printf("Registro Inexistente.");
+    printf("Registro inexistente.");
     closeHeaderEBinario(&header, &binario);
     return;
   }
@@ -387,24 +394,87 @@ void pesquisaIndice(){
   scanf("%s %d", campo, &valor);
   int * count = malloc(sizeof(int));
   *count = 0;
-  int rrn = pesquisaIndice_(indice, valor, count); // rrn do registro no arquivo de dados
+  int rrn = pesquisaIndice(indice, valor, count);
 
-  //printf("RRN encontrado: %d, RRN máximo dados: %d\n", rrn, header->RRNproxRegistro);
-
-  if (rrn > header->RRNproxRegistro || rrn == -1) printf("Registro Inexistente");
+  if (rrn > header->RRNproxRegistro || rrn == -1) printf("Registro inexistente.\n");
   else if (rrn != -1){
     baby = readRegistros(binario, rrn);
-    // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
     if(baby != NULL) {
       printBaby(baby);
       //printBabyFull(baby);
       printf("Quantidade de paginas da arvore-B acessadas: %d\n", *count);
-    } else if (baby == NULL) printf("Registro Inexistente");
+    } else if (baby == NULL) printf("Registro inexistente.\n");
     destroyBaby(&baby);
   }
   
   free(count);
   closeHeaderEBinario(&header, &binario);
+  closeIndice(&indice);
+}
+
+void incluiNoIndice(){
+  FILE * binario;
+  Header * header;
+  if(leBinarioEHeader(&binario, &header, NULL) == FAIL)
+    return;
+
+  char nomeDoArquivoDeIndice[128];
+  scanf("%s", nomeDoArquivoDeIndice);
+  Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_EXISTENTE);
+
+  if(indice == NULL){
+    printf("Falha no processamento do arquivo\n");
+    closeHeaderEBinario(&header, &binario);
+    return;
+  }
+
+  Baby * baby;
+  int numeroDeInsercoes;
+  scanf("%d", &numeroDeInsercoes);
+
+  for (int i = 0; i < numeroDeInsercoes; i++){
+    baby = readInputBaby(); // lê o input do teclado e coloca em uma struct Baby
+    fseek(binario, 0, SEEK_END); // vai até o fim do arquivo
+    
+    // insere no arquivo de dados
+    writeRegistros(header, binario, baby, -1); 
+
+    // insere no arquivo de indice
+    inserir(indice, baby->idNascimento, header -> RRNproxRegistro);
+
+    
+
+    updateHeader(header, 1); // incrementa no header a quantidade de arquivos inseridos e RRNproxreg
+    destroyBaby(&baby);
+  }
+
+  closeHeaderEBinario(&header, &binario);
+  closeIndice(&indice);
+
+  binarioNaTela(nomeDoArquivoDeIndice);
+}
+
+void imprimeArvoreB(){
+  char nomeDoArquivoDeIndice[128];
+  scanf("%s", nomeDoArquivoDeIndice);
+  Indice * indice = initIndice(nomeDoArquivoDeIndice, ARQUIVO_EXISTENTE);
+  Pagina * pagina;
+
+  if(indice == NULL || getStatusIndice(indice) == '0'){
+    printf("Falha no processamento do arquivo.");
+    closeIndice(&indice);
+    return;
+  }
+
+  printHeaderIndice(indice);
+
+  for (int i = 0; i < getProxRRN(indice) ; i++){
+    printf("\nPágina de RRN %d\n", i);
+    pagina = carregaPagina(indice, i);
+    printPagina(pagina);
+    destroyPagina(&pagina);
+  }
+
   closeIndice(&indice);
 }
 
@@ -448,8 +518,16 @@ int main(){
       break;
 
     case 9:
-      pesquisaIndice();
+      pesquisaIndice_();
       break;
+
+    case 10:
+      incluiNoIndice();
+      break;
+
+    case 11:
+      imprimeArvoreB();
+      break;  
 
   }  
 
