@@ -394,19 +394,16 @@ void pesquisaIndice_(){
   scanf("%s %d", campo, &valor);
   int * count = malloc(sizeof(int));
   *count = 0;
-  int rrn = pesquisaIndice(indice, valor, count); // rrn do registro no arquivo de dados
+  int rrn = pesquisaIndice(indice, valor, count);
 
-  //printf("RRN encontrado: %d, RRN máximo dados: %d\n", rrn, header->RRNproxRegistro);
-
-  if (rrn > header->RRNproxRegistro || rrn == -1) printf("Registro inexistente");
+  if (rrn > header->RRNproxRegistro || rrn == -1) printf("Registro inexistente.\n");
   else if (rrn != -1){
     baby = readRegistros(binario, rrn);
-    // caso o rrn pedido seja válido e o bebê não esteja logicamente removido
     if(baby != NULL) {
       printBaby(baby);
       //printBabyFull(baby);
       printf("Quantidade de paginas da arvore-B acessadas: %d\n", *count);
-    } else if (baby == NULL) printf("Registro inexistente");
+    } else if (baby == NULL) printf("Registro inexistente.\n");
     destroyBaby(&baby);
   }
   
